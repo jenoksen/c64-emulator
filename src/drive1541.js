@@ -1,9 +1,9 @@
 /*
- * C64-emulator — Commodore 1541: VIA 6522, GCR, diskmekanikk
+ * C64 emulator — Commodore 1541: VIA 6522, GCR, disk mechanics
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * Copyright (C) 2026 John Werner Enoksen <john@enoksen.no>
- * Utviklet med hjelp av Claude (Anthropic).
+ * Developed with the help of Claude (Anthropic).
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

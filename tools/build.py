@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-2.0-or-later
-# Bygger dist/c64-emulator.html: én selvstendig HTML-fil av kildefilene i src/.
+# Builds dist/c64-emulator.html: one self-contained HTML file from the sources in src/.
 import html, pathlib
 root = pathlib.Path(__file__).resolve().parent.parent
 src = root / 'src'
@@ -12,4 +12,4 @@ page = page.replace('/*CORE*/', core).replace('<!--LICENSE_TEXT-->', html.escape
 out = root / 'dist' / 'c64-emulator.html'
 out.parent.mkdir(exist_ok=True)
 out.write_text(page, encoding='utf-8')
-print(f'Skrev {out} ({out.stat().st_size} byte)')
+print(f'Wrote {out} ({out.stat().st_size} bytes)')

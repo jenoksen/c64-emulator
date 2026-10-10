@@ -1,9 +1,9 @@
 /*
- * C64-emulator — GENERERT fil: 6510 som generator for 1541-stasjonen. Ikke rediger; lages av tools/gen_cpugen.py fra src/cpu.js
+ * C64 emulator — GENERATED file: 6510 as a generator for the 1541 drive. Do not edit; made by tools/gen_cpugen.py from src/cpu.js
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * Copyright (C) 2026 John Werner Enoksen <john@enoksen.no>
- * Utviklet med hjelp av Claude (Anthropic).
+ * Developed with the help of Claude (Anthropic).
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

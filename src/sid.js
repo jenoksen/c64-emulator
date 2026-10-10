@@ -1,9 +1,9 @@
 /*
- * C64-emulator — MOS 6581 SID lydbrikke
+ * C64 emulator — MOS 6581 SID sound chip
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * Copyright (C) 2026 John Werner Enoksen <john@enoksen.no>
- * Utviklet med hjelp av Claude (Anthropic).
+ * Developed with the help of Claude (Anthropic).
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

@@ -2,7 +2,7 @@
 
 A Commodore 64 emulator for the browser, written from scratch in plain JavaScript with no external libraries. The whole emulator ships as a single HTML file.
 
-The user interface is in Norwegian.
+The user interface is in English, with Norwegian available from the language button.
 
 **Try it in your browser:** <https://jenoksen.github.io/c64-emulator/>
 

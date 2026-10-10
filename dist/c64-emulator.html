@@ -1,17 +1,17 @@
 <!doctype html>
 <!--
-  C64-emulator — en Commodore 64-emulator i nettleseren
+  C64 emulator — a Commodore 64 emulator for the browser
   SPDX-License-Identifier: GPL-2.0-or-later
-  Copyright (C) 2026 John Werner Enoksen <john@enoksen.no>. Utviklet med hjelp av Claude (Anthropic).
-  Inneholder kode portert fra libsidplayfp (Copyright 2011-2013 Leandro Nini, 2007-2010 Antti Lankila,
-  2000 Simon White; GPL-2.0-or-later). Se avsnittet «Om, kreditering og lisens» nederst på siden.
-  Denne filen er selve kildekoden; den er ikke minifisert.
+  Copyright (C) 2026 John Werner Enoksen <john@enoksen.no>. Developed with the help of Claude (Anthropic).
+  Contains code ported from libsidplayfp (Copyright 2011-2013 Leandro Nini, 2007-2010 Antti Lankila,
+  2000 Simon White; GPL-2.0-or-later). See "About, credits and license" at the bottom of the page.
+  This file is the source code itself; it is not minified.
 -->
-<html lang="no">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>C64 i nettleseren</title>
+<title>C64 in the browser</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;600;800&display=swap" rel="stylesheet">
@@ -104,100 +104,69 @@ body.touch h1, body.touch .sub{display:none}
 <body>
 <main>
   <h1>Commodore 64</h1>
-  <p class="sub">En C64-emulator skrevet fra bunnen av i JavaScript: 6510-prosessor, VIC-II-grafikk med sprites, SID-lyd, to CIA-brikker, tastatur og en fullt emulert 1541-diskettstasjon som også takler hurtiglastere.</p>
+  <p class="sub" data-i18n="sub"></p>
 
   <div class="play">
     <div class="tp tp-left">
-      <div class="stick" id="stick" aria-label="Virtuell joystick"><div class="knob" id="knob"></div></div>
+      <div class="stick" id="stick" data-i18n-aria="ariaStick"><div class="knob" id="knob"></div></div>
       <div class="tkeys"><button data-k="STOP">RUN/STOP</button><button id="tshift" aria-pressed="false">SHIFT</button><button data-k="F1">F1</button><button data-k="F3">F3</button><button data-k="F5">F5</button><button data-k="F7">F7</button></div>
     </div>
     <div class="center">
-      <div class="monitor"><canvas id="screen" width="384" height="272" aria-label="C64-skjerm"></canvas></div>
-      <div class="dkeys" aria-label="C64-taster">
+      <div class="monitor"><canvas id="screen" width="384" height="272" data-i18n-aria="ariaScreen"></canvas></div>
+      <div class="dkeys" data-i18n-aria="ariaKeys">
         <button data-k="F1">F1</button><button data-k="LSH F1">F2</button><button data-k="F3">F3</button><button data-k="LSH F3">F4</button>
         <button data-k="F5">F5</button><button data-k="LSH F5">F6</button><button data-k="F7">F7</button><button data-k="LSH F7">F8</button>
         <span class="sep"></span>
-        <button data-k="STOP">RUN/STOP</button><button data-restore="1">RESTORE</button><button data-k="HOME">CLR/HOME</button><button data-k="CBM">C=</button><button class="pastebtn">Lim inn tekst</button>
+        <button data-k="STOP">RUN/STOP</button><button data-restore="1">RESTORE</button><button data-k="HOME">CLR/HOME</button><button data-k="CBM">C=</button><button class="pastebtn" data-i18n="pasteText"></button>
       </div>
     </div>
     <div class="tp tp-right">
-      <button class="fire" id="fire" aria-label="Fyr">FYR</button>
-      <div class="tkeys"><button data-k="RET">RETURN</button><button data-k="SPC">SPACE</button><button data-k="Y">Y</button><button data-k="N">N</button><button id="kbdbtn" aria-label="Vis tastatur">⌨︎</button><button class="pastebtn">Lim inn</button></div>
+      <button class="fire" id="fire" data-i18n="fire" data-i18n-aria="fire"></button>
+      <div class="tkeys"><button data-k="RET">RETURN</button><button data-k="SPC">SPACE</button><button data-k="Y">Y</button><button data-k="N">N</button><button id="kbdbtn" data-i18n-aria="ariaKbd">⌨︎</button><button class="pastebtn" data-i18n="paste"></button></div>
     </div>
   </div>
   <textarea id="kbd" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" aria-hidden="true"></textarea>
 
   <div class="deck">
     <span class="led" id="led" aria-hidden="true"></span>
-    <button id="reset" disabled>Slå av og på</button>
-    <button id="loadprg" disabled>Last inn program</button>
+    <button id="reset" disabled data-i18n="reset"></button>
+    <button id="loadprg" disabled data-i18n="load"></button>
     <span class="dled" id="dled" title="1541">1541</span>
-    <button id="drvmode" title="Hvordan diskettstasjonen emuleres" hidden>1541: rask</button>
-    <button id="dlDisk" hidden>Last ned disk</button>
-    <select id="disksel" hidden aria-label="Velg disk"></select>
-    <button id="touchbtn" aria-pressed="false">Touch av</button>
-    <button id="joy" aria-pressed="false" title="Tapp høyre Option for å bytte">Joystick av</button>
-    <button id="joyport" title="Hvilken joystickport spillet bruker">Port 2</button>
-    <button id="sound" aria-pressed="true">Lyd på</button>
-    <button id="romsbtn">Bytt ROM-filer</button>
+    <button id="drvmode" data-i18n-title="titleDrive" hidden></button>
+    <button id="dlDisk" hidden data-i18n="dlDisk"></button>
+    <select id="disksel" hidden data-i18n-aria="ariaDisk"></select>
+    <button id="touchbtn" aria-pressed="false"></button>
+    <button id="joy" aria-pressed="false" data-i18n-title="titleJoy"></button>
+    <button id="joyport" data-i18n-title="titlePort">Port 2</button>
+    <button id="sound" aria-pressed="true"></button>
+    <button id="romsbtn" data-i18n="roms"></button>
+    <button id="langbtn" lang="no">Norsk</button>
     <input type="file" id="prgfile" accept=".prg,.d64,.zip" hidden>
     <span id="status" role="status"></span>
   </div>
 
   <section id="setup" hidden>
-    <h2>Legg inn ROM-filene</h2>
-    <p>Emulatoren trenger innholdet i tre ROM-brikker fra en C64. ROM-filene er Commodores opphavsrettsbeskyttede verk og følger ikke med. Bruk filer du har rett til å bruke, for eksempel lest ut fra din egen maskin, og slipp dem her. De lagres bare i denne nettleseren, så du gjør det én gang.</p>
+    <h2 data-i18n="setupH"></h2>
+    <p data-i18n="setupP"></p>
     <ul class="roms">
-      <li><span class="mark" id="m-basic">·</span><strong>BASIC</strong><span class="d">BASIC V2-tolkeren, 8 kB (Commodore 901226-01)</span></li>
-      <li><span class="mark" id="m-kernal">·</span><strong>KERNAL</strong><span class="d">Operativsystemet, 8 kB (Commodore 901227-03, eller en nasjonal variant)</span></li>
-      <li><span class="mark" id="m-chargen">·</span><strong>Tegnsett</strong><span class="d">Tegngeneratoren, 4 kB (Commodore 901225-01)</span></li>
-      <li><span class="mark" id="m-drive">·</span><strong>1541 DOS</strong><span class="d">Valgfri: 16 kB fra en 1541-diskettstasjon, for ekte diskettstasjon og hurtiglastere (for eksempel 1541-II 251968-03, eller de to halvdelene 325302-01 og 901229-05)</span></li>
+      <li><span class="mark" id="m-basic">·</span><strong>BASIC</strong><span class="d" data-i18n="romBasic"></span></li>
+      <li><span class="mark" id="m-kernal">·</span><strong>KERNAL</strong><span class="d" data-i18n="romKernal"></span></li>
+      <li><span class="mark" id="m-chargen">·</span><strong data-i18n="romCharH"></strong><span class="d" data-i18n="romChar"></span></li>
+      <li><span class="mark" id="m-drive">·</span><strong>1541 DOS</strong><span class="d" data-i18n="romDrive"></span></li>
     </ul>
-    <label class="btn" for="romfile">Velg filer</label>
+    <label class="btn" for="romfile" data-i18n="choose"></label>
     <input type="file" id="romfile" multiple hidden>
-    <span class="d" style="margin-left:8px;color:var(--muted)">eller dra dem inn på siden</span>
+    <span class="d" style="margin-left:8px;color:var(--muted)" data-i18n="orDrag"></span>
   </section>
 
   <details>
-    <summary>Tastatur og kontroller</summary>
-    <dl>
-      <dt><kbd>Esc</kbd></dt><dd>RUN/STOP (sammen med <kbd>PgUp</kbd> for RUN/STOP + RESTORE)</dd>
-      <dt><kbd>PgUp</kbd></dt><dd>RESTORE</dd>
-      <dt><kbd>Tab</kbd></dt><dd>CTRL</dd>
-      <dt>venstre <kbd>Alt</kbd></dt><dd>Commodore-tasten (C=)</dd>
-      <dt><kbd>Home</kbd> / <kbd>End</kbd></dt><dd>HOME / CLR</dd>
-      <dt><kbd>Insert</kbd></dt><dd>INST</dd>
-      <dt><kbd>F1</kbd>–<kbd>F8</kbd></dt><dd>Funksjonstastene. På Mac må du holde <kbd>fn</kbd>, eller bruke <kbd>Ctrl</kbd>+<kbd>1</kbd>–<kbd>8</kbd>, eller knappene under skjermen.</dd>
-      <dt>Piltastene</dt><dd>Markøren</dd>
-      <dt><kbd>§</kbd> eller <kbd>`</kbd></dt><dd>Venstrepil (←)</dd>
-      <dt>Høyre <kbd>Option</kbd> (kort trykk)</dt><dd>Slår joystick-modus av og på. I joystick-modus styrer piltastene og <kbd>mellomrom</kbd> er fyr. Resten av tastaturet virker som vanlig.</dd>
-      <dt>Port 1 / Port 2</dt><dd>De fleste spill bruker port 2. Hvis ingenting skjer når du styrer, bytt port med knappen.</dd>
-      <dt>Numpad <kbd>8</kbd> <kbd>2</kbd> <kbd>4</kbd> <kbd>6</kbd> <kbd>0</kbd></dt><dd>Joystick alltid, 0 er fyr</dd>
-      <dt>Mobil</dt><dd>«Touch på» viser virtuell joystick (venstre) og fyrknapp (høyre), og knapper for RUN/STOP, RETURN, SPACE, F1–F7, Y og N. SHIFT gjelder neste tast, så SHIFT + F1 gir F2. Lyden starter når du slipper første trykk; på iPhone med eldre iOS må stillebryteren være av. ⌨︎ åpner telefonens tastatur for å skrive. Snu telefonen på tvers for størst skjerm.</dd>
-      <dt>«Lim inn»</dt><dd>Knappen limer inn tekst fra utklippstavlen, for eksempel et BASIC-program, som om du skrev det. Fungerer også på mobil.</dd>
-      <dt><kbd>Ctrl</kbd>+<kbd>V</kbd></dt><dd>Limer inn tekst, for eksempel et BASIC-program</dd>
-    </dl>
-    <p>Diskettstasjonen: med 1541-ROM lagt inn emuleres en ekte 1541 med egen prosessor, så spill med hurtiglastere fungerer. Knappen for 1541-modus velger mellom «ekte + rask LOAD» (anbefalt: vanlige LOAD-kommandoer går lynraskt, alt annet går gjennom den ekte stasjonen), «helt ekte» og «av». Mens disken går, kjører emulatoren i turbo uten lyd. Lampen ved «1541» lyser når stasjonen arbeider. Lagrer et program noe på disken, dukker knappen «Last ned disk» opp.</p>
-    <p>Skilletegn følger tegnet du faktisk skriver, så norsk tastatur fungerer som forventet. Programfiler (.prg), diskbilder (.d64) og .zip-filer med slike kan dras rett inn på siden. Zip-filer pakkes ut automatisk, og inneholder de flere disker får du en disk-velger for å bytte diskside. Med en disk inne fungerer <code>LOAD"$",8</code> og <code>LIST</code> for å se innholdet, og <code>LOAD"NAVN",8,1</code> for å laste et bestemt program.</p>
+    <summary data-i18n="helpH"></summary>
+    <div data-i18n="help"></div>
   </details>
   <details class="about" id="about">
-    <summary>Om, kreditering og lisens</summary>
-    <p><strong>Åpen kildekode.</strong> Emulatoren er fri programvare under <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html" target="_blank" rel="noopener">GNU General Public License versjon 2</a> eller (etter ditt valg) en senere versjon. Denne HTML-filen er selve kildekoden: du kan lese, endre og dele den på de samme vilkårene. Den gis uten noen form for garanti.</p>
-    <p>Copyright © 2026 John Werner Enoksen (<a href="mailto:john@enoksen.no">john@enoksen.no</a>). Utviklet med hjelp av Claude (Anthropic).</p>
-    <h3>Kreditering</h3>
-    <dl class="credits">
-      <dt>libsidplayfp</dt><dd>Leandro Nini, Antti Lankila og Simon White. Tilstandsmaskinen for CIA-timerne er portert fra prosjektets <code>timer.cpp</code> (GPL-2.0-or-later), med opprinnelig opphavsrettsmerknad bevart i koden. <a href="https://github.com/libsidplayfp/libsidplayfp" target="_blank" rel="noopener">github.com/libsidplayfp</a></dd>
-      <dt>Christian Bauer</dt><dd>«The MOS 6567/6569 video controller (VIC-II) and its application in the Commodore 64», dokumentasjonen VIC-II-modellen bygger på.</dd>
-      <dt>Philip «Pepto» Timmermann</dt><dd>Fargepaletten, basert på hans målinger av VIC-II-fargene.</dd>
-      <dt>«No More Secrets»</dt><dd>Dokumentasjonen av NMOS 6510 sine udokumenterte instruksjoner (groepaz m.fl.), brukt som referanse.</dd>
-      <dt>Wolfgang Lorenz</dt><dd>Testsuiten for C64-emulatorer (offentlig eie), via VICE-testprogs. Brukt til å verifisere CPU, CIA og interrupt-timing; ikke inkludert.</dd>
-      <dt>Klaus Dormann</dt><dd>6502 functional test, brukt til å verifisere prosessoren; ikke inkludert.</dd>
-      <dt>Lasse Öörni (Cadaver)</dt><dd>c64gameframework. Eksempelspillet ble brukt til å teste 1541-emuleringen og hurtiglasteren; ikke inkludert.</dd>
-      <dt>Chivo</dt><dd>Skrifttype av Omnibus-Type, SIL Open Font License 1.1, levert av Google Fonts.</dd>
-    </dl>
-    <h3>ROM-filer og varemerker</h3>
-    <p>ROM-filene (BASIC, KERNAL, tegnsett og 1541 DOS) er Commodores opphavsrettsbeskyttede verk. De er ikke en del av emulatoren eller lisensen, og følger ikke med; du legger dem inn selv. «Commodore» og «Commodore 64» er varemerker for sine respektive eiere. Prosjektet er ikke tilknyttet dem.</p>
-    <details><summary>Hele lisensteksten (GPL-2.0)</summary><pre class="license">                    GNU GENERAL PUBLIC LICENSE
+    <summary data-i18n="aboutH"></summary>
+    <div data-i18n="about"></div>
+    <details><summary data-i18n="licenseH"></summary><pre class="license">                    GNU GENERAL PUBLIC LICENSE
                        Version 2, June 1991
 
  Copyright (C) 1989, 1991 Free Software Foundation, Inc.,
@@ -541,11 +510,11 @@ Public License instead of this License.
 </main>
 <script>
 /*
- * C64-emulator — MOS 6510-prosessor, syklusnøyaktig på bussnivå
+ * C64 emulator — MOS 6510 CPU, cycle-exact at bus level
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * Copyright (C) 2026 John Werner Enoksen <john@enoksen.no>
- * Utviklet med hjelp av Claude (Anthropic).
+ * Developed with the help of Claude (Anthropic).
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -796,11 +765,11 @@ function makeCPU(rd, wr) {
 }
 
 /*
- * C64-emulator — GENERERT fil: 6510 som generator for 1541-stasjonen. Ikke rediger; lages av tools/gen_cpugen.py fra src/cpu.js
+ * C64 emulator — GENERATED file: 6510 as a generator for the 1541 drive. Do not edit; made by tools/gen_cpugen.py from src/cpu.js
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * Copyright (C) 2026 John Werner Enoksen <john@enoksen.no>
- * Utviklet med hjelp av Claude (Anthropic).
+ * Developed with the help of Claude (Anthropic).
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1051,11 +1020,11 @@ function makeCPUGen(rd, wr) {
 }
 
 /*
- * C64-emulator — MOS 6581 SID lydbrikke
+ * C64 emulator — MOS 6581 SID sound chip
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * Copyright (C) 2026 John Werner Enoksen <john@enoksen.no>
- * Utviklet med hjelp av Claude (Anthropic).
+ * Developed with the help of Claude (Anthropic).
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1164,11 +1133,11 @@ class SID {
 }
 
 /*
- * C64-emulator — MOS 6526 CIA (timere, interrupter, porter)
+ * C64 emulator — MOS 6526 CIA (timers, interrupts, ports)
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * Copyright (C) 2026 John Werner Enoksen <john@enoksen.no>
- * Utviklet med hjelp av Claude (Anthropic).
+ * Developed with the help of Claude (Anthropic).
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1290,11 +1259,11 @@ class CIA {
 }
 
 /*
- * C64-emulator — Commodore 1541: VIA 6522, GCR, diskmekanikk
+ * C64 emulator — Commodore 1541: VIA 6522, GCR, disk mechanics
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * Copyright (C) 2026 John Werner Enoksen <john@enoksen.no>
- * Utviklet med hjelp av Claude (Anthropic).
+ * Developed with the help of Claude (Anthropic).
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1559,11 +1528,11 @@ function make1541(rom) {
 }
 
 /*
- * C64-emulator — maskinen: minnekart, VIC-II, IEC-buss, LOAD-felle
+ * C64 emulator — the machine: memory map, VIC-II, IEC bus, LOAD trap
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * Copyright (C) 2026 John Werner Enoksen <john@enoksen.no>
- * Utviklet med hjelp av Claude (Anthropic).
+ * Developed with the help of Claude (Anthropic).
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1907,11 +1876,11 @@ function makeC64(roms) {
 }
 
 /*
- * C64-emulator — D64-diskbilde (katalog og filer)
+ * C64 emulator — D64 disk image (directory and files)
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * Copyright (C) 2026 John Werner Enoksen <john@enoksen.no>
- * Utviklet med hjelp av Claude (Anthropic).
+ * Developed with the help of Claude (Anthropic).
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1925,7 +1894,7 @@ function makeC64(roms) {
  */
 // ---- D64 disk image parser ----
 function parseD64(img) {
-  if (img.length < 174848) throw new Error('ikke en D64-fil');
+  if (img.length < 174848) throw new Error('not a D64 file');
   const spt = t => t <= 17 ? 21 : t <= 24 ? 19 : t <= 30 ? 18 : 17;
   const off = (t, s) => { let o = 0; for (let i = 1; i < t; i++) o += spt(i); return (o + s) * 256; };
   const ok = (t, s) => t >= 1 && t <= 40 && s < spt(Math.min(t, 35)) && off(t, s) + 256 <= img.length;
@@ -1964,7 +1933,190 @@ function parseD64(img) {
   const roms = { basic: null, kernal: null, chargen: null, drive: null, driveLo: null, driveHi: null };
   let c64 = null, running = false, frameNo = 0;
   const typeQ = [];
-  const status = t => { $('status').textContent = t; };
+  // status() takes a string or a function, so the current message can be re-rendered in a new language
+  let statusMsg = '';
+  const status = t => { statusMsg = t; $('status').textContent = typeof t === 'function' ? t() : t; };
+
+  // ---- Language: English is the default; Norwegian is available via the language button ----
+  const I18N = {
+    en: {
+      sub: 'A C64 emulator written from scratch in JavaScript: 6510 CPU, VIC-II graphics with sprites, SID sound, two CIA chips, keyboard and a fully emulated 1541 disk drive that also handles fast loaders.',
+      ariaStick: 'Virtual joystick', ariaScreen: 'C64 screen', ariaKeys: 'C64 keys', ariaKbd: 'Show keyboard', ariaDisk: 'Choose disk',
+      pasteText: 'Paste text', paste: 'Paste', fire: 'FIRE',
+      reset: 'Power cycle', load: 'Load program', dlDisk: 'Download disk', roms: 'Change ROM files',
+      titleDrive: 'How the disk drive is emulated', titleJoy: 'Tap right Option to toggle', titlePort: 'Which joystick port the game uses',
+      touchOn: 'Touch on', touchOff: 'Touch off', joyOn: 'Joystick on', joyOff: 'Joystick off', soundOn: 'Sound on', soundOff: 'Sound off',
+      setupH: 'Add the ROM files',
+      setupP: 'The emulator needs the contents of three ROM chips from a C64. The ROM files are copyrighted works of Commodore and are not included. Use files you have the right to use, for example read out from your own machine, and drop them here. They are stored only in this browser, so you only do this once.',
+      romBasic: 'The BASIC V2 interpreter, 8 kB (Commodore 901226-01)',
+      romKernal: 'The operating system, 8 kB (Commodore 901227-03, or a national variant)',
+      romCharH: 'Character set', romChar: 'The character generator, 4 kB (Commodore 901225-01)',
+      romDrive: 'Optional: 16 kB from a 1541 disk drive, for the real disk drive and fast loaders (for example 1541-II 251968-03, or the two halves 325302-01 and 901229-05)',
+      choose: 'Choose files', orDrag: 'or drag them onto the page',
+      helpH: 'Keyboard and controls',
+      help: `<dl>
+      <dt><kbd>Esc</kbd></dt><dd>RUN/STOP (with <kbd>PgUp</kbd> for RUN/STOP + RESTORE)</dd>
+      <dt><kbd>PgUp</kbd></dt><dd>RESTORE</dd>
+      <dt><kbd>Tab</kbd></dt><dd>CTRL</dd>
+      <dt>Left <kbd>Alt</kbd></dt><dd>The Commodore key (C=)</dd>
+      <dt><kbd>Home</kbd> / <kbd>End</kbd></dt><dd>HOME / CLR</dd>
+      <dt><kbd>Insert</kbd></dt><dd>INST</dd>
+      <dt><kbd>F1</kbd>–<kbd>F8</kbd></dt><dd>The function keys. On a Mac, hold <kbd>fn</kbd>, use <kbd>Ctrl</kbd>+<kbd>1</kbd>–<kbd>8</kbd>, or use the buttons below the screen.</dd>
+      <dt>Arrow keys</dt><dd>The cursor</dd>
+      <dt><kbd>§</kbd> or <kbd>\`</kbd></dt><dd>Left arrow (←)</dd>
+      <dt>Right <kbd>Option</kbd> (short tap)</dt><dd>Toggles joystick mode. In joystick mode the arrow keys steer and <kbd>space</kbd> fires. The rest of the keyboard works as usual.</dd>
+      <dt>Port 1 / Port 2</dt><dd>Most games use port 2. If nothing happens when you steer, switch ports with the button.</dd>
+      <dt>Numpad <kbd>8</kbd> <kbd>2</kbd> <kbd>4</kbd> <kbd>6</kbd> <kbd>0</kbd></dt><dd>Always joystick, 0 fires</dd>
+      <dt>Mobile</dt><dd>"Touch on" shows a virtual joystick (left) and fire button (right), and buttons for RUN/STOP, RETURN, SPACE, F1–F7, Y and N. SHIFT applies to the next key, so SHIFT + F1 gives F2. Sound starts when you lift your finger after the first tap; on an iPhone with an older iOS the silent switch must be off. ⌨︎ opens the phone keyboard for typing. Turn the phone sideways for the largest screen.</dd>
+      <dt>"Paste"</dt><dd>Types text from the clipboard, such as a BASIC program, as if you typed it. Also works on mobile.</dd>
+      <dt><kbd>Ctrl</kbd>+<kbd>V</kbd></dt><dd>Pastes text, such as a BASIC program</dd>
+    </dl>
+    <p>The disk drive: with a 1541 ROM added, a real 1541 with its own processor is emulated, so games with fast loaders work. The 1541 mode button switches between "real + fast LOAD" (recommended: normal LOAD commands are instant, everything else goes through the real drive), "fully real" and "off". While the disk spins, the emulator runs in turbo without sound. The light next to "1541" is on while the drive works. If a program saves something to the disk, a "Download disk" button appears.</p>
+    <p>Punctuation follows the character you actually type, so non-US keyboards work as expected. Program files (.prg), disk images (.d64) and .zip files containing them can be dragged straight onto the page. Zip files are unpacked automatically, and if they contain several disks you get a disk selector to switch disk sides. With a disk inserted, <code>LOAD"$",8</code> and <code>LIST</code> show its contents, and <code>LOAD"NAME",8,1</code> loads a specific program.</p>`,
+      aboutH: 'About, credits and license',
+      about: `<p><strong>Open source.</strong> The emulator is free software under the <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html" target="_blank" rel="noopener">GNU General Public License version 2</a> or (at your option) any later version. This HTML file is the source code itself: you may read, change and share it on the same terms. It comes with no warranty of any kind.</p>
+    <p>Copyright © 2026 John Werner Enoksen (<a href="mailto:john@enoksen.no">john@enoksen.no</a>). Developed with the help of Claude (Anthropic). Source code: <a href="https://github.com/jenoksen/c64-emulator" target="_blank" rel="noopener">github.com/jenoksen/c64-emulator</a></p>
+    <h3>Credits</h3>
+    <dl class="credits">
+      <dt>libsidplayfp</dt><dd>Leandro Nini, Antti Lankila and Simon White. The CIA timer state machine is ported from the project's <code>timer.cpp</code> (GPL-2.0-or-later), with the original copyright notice kept in the code. <a href="https://github.com/libsidplayfp/libsidplayfp" target="_blank" rel="noopener">github.com/libsidplayfp</a></dd>
+      <dt>Christian Bauer</dt><dd>"The MOS 6567/6569 video controller (VIC-II) and its application in the Commodore 64", the documentation the VIC-II model is based on.</dd>
+      <dt>Philip "Pepto" Timmermann</dt><dd>The colour palette, based on his measurements of the VIC-II colours.</dd>
+      <dt>"No More Secrets"</dt><dd>Documentation of the NMOS 6510's undocumented instructions (groepaz et al.), used as a reference.</dd>
+      <dt>Wolfgang Lorenz</dt><dd>The C64 emulator test suite (public domain), via VICE-testprogs. Used to verify CPU, CIA and interrupt timing; not included.</dd>
+      <dt>Klaus Dormann</dt><dd>6502 functional test, used to verify the processor; not included.</dd>
+      <dt>Lasse Öörni (Cadaver)</dt><dd>c64gameframework. Its example game was used to test the 1541 emulation and fast loader; not included.</dd>
+      <dt>Chivo</dt><dd>Typeface by Omnibus-Type, SIL Open Font License 1.1, served by Google Fonts.</dd>
+    </dl>
+    <h3>ROM files and trademarks</h3>
+    <p>The ROM files (BASIC, KERNAL, character set and 1541 DOS) are copyrighted works of Commodore. They are not part of the emulator or its license and are not included; you add them yourself. "Commodore" and "Commodore 64" are trademarks of their respective owners. This project is not affiliated with them.</p>`,
+      licenseH: 'Full license text (GPL-2.0)',
+      sNoFiles: n => `${n}: no .d64, .prg or ROM files found`,
+      sBadSize: (n, l) => `${n}: unknown file size (${l} bytes)`,
+      sDriveOn: '1541 ROM added: the real disk drive is on',
+      sMissing: 'Some ROM files are still missing',
+      mode: { hybrid: '1541: real + fast LOAD', real: '1541: fully real', off: '1541: off (fast)' },
+      modeMsg: { hybrid: 'Real 1541 with a fast LOAD command (recommended). The machine has been restarted.',
+                 real: 'Fully real 1541: normal LOAD also runs at original speed (turbo is on while the disk spins). The machine has been restarted.',
+                 off: 'The disk drive is off: fast LOAD only, fast loaders will not work. The machine has been restarted.' },
+      sDisks: (k, n) => `${k} disks found. ${n} is inserted; switch with the disk selector when the game asks for it.`,
+      sRomsFirst: 'Add the ROM files first',
+      sSwapped: n => `Disk changed: ${n}`,
+      sNoPrograms: n => `${n} inserted – the disk has no programs`,
+      sLoading: n => `Loading and starting ${n}`,
+      sLoadedDisk: n => `${n} loaded – type the SYS address or LIST`,
+      sTooBig: n => `${n} is too big`,
+      sRunning: n => `Running ${n}`,
+      sLoadedAt: (n, h, d) => `${n} loaded at $${h} – start it with SYS ${d}`,
+      sJoyOn: p => `Joystick on in port ${p}: arrow keys and space`,
+      sJoyOff: 'Joystick off: arrow keys and space are keyboard again',
+      sNoSound: 'The browser does not allow sound here',
+      sPort: p => `Joystick in port ${p}`,
+      sKey: k => `Key: ${k}`,
+      pastePrompt: 'Paste the text here (touch and hold the field and choose "Paste"), then press OK:',
+      sPasting: n => `Pasting ${n} characters …`,
+      sTip: 'Tip: add a 1541 ROM under "Change ROM files" for games with fast loaders',
+      sWaiting: 'Waiting for ROM files',
+      eZip: 'not a valid zip file', eZipPw: 'password-protected zip files are not supported', eZipOld: 'this browser cannot unpack zip files (too old)',
+      eD64: 'not a D64 file',
+      langBtn: 'Norsk', langCode: 'no'
+    },
+    no: {
+      sub: 'En C64-emulator skrevet fra bunnen av i JavaScript: 6510-prosessor, VIC-II-grafikk med sprites, SID-lyd, to CIA-brikker, tastatur og en fullt emulert 1541-diskettstasjon som også takler hurtiglastere.',
+      ariaStick: 'Virtuell joystick', ariaScreen: 'C64-skjerm', ariaKeys: 'C64-taster', ariaKbd: 'Vis tastatur', ariaDisk: 'Velg disk',
+      pasteText: 'Lim inn tekst', paste: 'Lim inn', fire: 'FYR',
+      reset: 'Slå av og på', load: 'Last inn program', dlDisk: 'Last ned disk', roms: 'Bytt ROM-filer',
+      titleDrive: 'Hvordan diskettstasjonen emuleres', titleJoy: 'Tapp høyre Option for å bytte', titlePort: 'Hvilken joystickport spillet bruker',
+      touchOn: 'Touch på', touchOff: 'Touch av', joyOn: 'Joystick på', joyOff: 'Joystick av', soundOn: 'Lyd på', soundOff: 'Lyd av',
+      setupH: 'Legg inn ROM-filene',
+      setupP: 'Emulatoren trenger innholdet i tre ROM-brikker fra en C64. ROM-filene er Commodores opphavsrettsbeskyttede verk og følger ikke med. Bruk filer du har rett til å bruke, for eksempel lest ut fra din egen maskin, og slipp dem her. De lagres bare i denne nettleseren, så du gjør det én gang.',
+      romBasic: 'BASIC V2-tolkeren, 8 kB (Commodore 901226-01)',
+      romKernal: 'Operativsystemet, 8 kB (Commodore 901227-03, eller en nasjonal variant)',
+      romCharH: 'Tegnsett', romChar: 'Tegngeneratoren, 4 kB (Commodore 901225-01)',
+      romDrive: 'Valgfri: 16 kB fra en 1541-diskettstasjon, for ekte diskettstasjon og hurtiglastere (for eksempel 1541-II 251968-03, eller de to halvdelene 325302-01 og 901229-05)',
+      choose: 'Velg filer', orDrag: 'eller dra dem inn på siden',
+      helpH: 'Tastatur og kontroller',
+      help: `<dl>
+      <dt><kbd>Esc</kbd></dt><dd>RUN/STOP (sammen med <kbd>PgUp</kbd> for RUN/STOP + RESTORE)</dd>
+      <dt><kbd>PgUp</kbd></dt><dd>RESTORE</dd>
+      <dt><kbd>Tab</kbd></dt><dd>CTRL</dd>
+      <dt>Venstre <kbd>Alt</kbd></dt><dd>Commodore-tasten (C=)</dd>
+      <dt><kbd>Home</kbd> / <kbd>End</kbd></dt><dd>HOME / CLR</dd>
+      <dt><kbd>Insert</kbd></dt><dd>INST</dd>
+      <dt><kbd>F1</kbd>–<kbd>F8</kbd></dt><dd>Funksjonstastene. På Mac må du holde <kbd>fn</kbd>, eller bruke <kbd>Ctrl</kbd>+<kbd>1</kbd>–<kbd>8</kbd>, eller knappene under skjermen.</dd>
+      <dt>Piltastene</dt><dd>Markøren</dd>
+      <dt><kbd>§</kbd> eller <kbd>\`</kbd></dt><dd>Venstrepil (←)</dd>
+      <dt>Høyre <kbd>Option</kbd> (kort trykk)</dt><dd>Slår joystick-modus av og på. I joystick-modus styrer piltastene og <kbd>mellomrom</kbd> er fyr. Resten av tastaturet virker som vanlig.</dd>
+      <dt>Port 1 / Port 2</dt><dd>De fleste spill bruker port 2. Hvis ingenting skjer når du styrer, bytt port med knappen.</dd>
+      <dt>Numpad <kbd>8</kbd> <kbd>2</kbd> <kbd>4</kbd> <kbd>6</kbd> <kbd>0</kbd></dt><dd>Joystick alltid, 0 er fyr</dd>
+      <dt>Mobil</dt><dd>«Touch på» viser virtuell joystick (venstre) og fyrknapp (høyre), og knapper for RUN/STOP, RETURN, SPACE, F1–F7, Y og N. SHIFT gjelder neste tast, så SHIFT + F1 gir F2. Lyden starter når du slipper første trykk; på iPhone med eldre iOS må stillebryteren være av. ⌨︎ åpner telefonens tastatur for å skrive. Snu telefonen på tvers for størst skjerm.</dd>
+      <dt>«Lim inn»</dt><dd>Knappen limer inn tekst fra utklippstavlen, for eksempel et BASIC-program, som om du skrev det. Fungerer også på mobil.</dd>
+      <dt><kbd>Ctrl</kbd>+<kbd>V</kbd></dt><dd>Limer inn tekst, for eksempel et BASIC-program</dd>
+    </dl>
+    <p>Diskettstasjonen: med 1541-ROM lagt inn emuleres en ekte 1541 med egen prosessor, så spill med hurtiglastere fungerer. Knappen for 1541-modus velger mellom «ekte + rask LOAD» (anbefalt: vanlige LOAD-kommandoer går lynraskt, alt annet går gjennom den ekte stasjonen), «helt ekte» og «av». Mens disken går, kjører emulatoren i turbo uten lyd. Lampen ved «1541» lyser når stasjonen arbeider. Lagrer et program noe på disken, dukker knappen «Last ned disk» opp.</p>
+    <p>Skilletegn følger tegnet du faktisk skriver, så norsk tastatur fungerer som forventet. Programfiler (.prg), diskbilder (.d64) og .zip-filer med slike kan dras rett inn på siden. Zip-filer pakkes ut automatisk, og inneholder de flere disker får du en disk-velger for å bytte diskside. Med en disk inne fungerer <code>LOAD"$",8</code> og <code>LIST</code> for å se innholdet, og <code>LOAD"NAVN",8,1</code> for å laste et bestemt program.</p>`,
+      aboutH: 'Om, kreditering og lisens',
+      about: `<p><strong>Åpen kildekode.</strong> Emulatoren er fri programvare under <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html" target="_blank" rel="noopener">GNU General Public License versjon 2</a> eller (etter ditt valg) en senere versjon. Denne HTML-filen er selve kildekoden: du kan lese, endre og dele den på de samme vilkårene. Den gis uten noen form for garanti.</p>
+    <p>Copyright © 2026 John Werner Enoksen (<a href="mailto:john@enoksen.no">john@enoksen.no</a>). Utviklet med hjelp av Claude (Anthropic). Kildekode: <a href="https://github.com/jenoksen/c64-emulator" target="_blank" rel="noopener">github.com/jenoksen/c64-emulator</a></p>
+    <h3>Kreditering</h3>
+    <dl class="credits">
+      <dt>libsidplayfp</dt><dd>Leandro Nini, Antti Lankila og Simon White. Tilstandsmaskinen for CIA-timerne er portert fra prosjektets <code>timer.cpp</code> (GPL-2.0-or-later), med opprinnelig opphavsrettsmerknad bevart i koden. <a href="https://github.com/libsidplayfp/libsidplayfp" target="_blank" rel="noopener">github.com/libsidplayfp</a></dd>
+      <dt>Christian Bauer</dt><dd>«The MOS 6567/6569 video controller (VIC-II) and its application in the Commodore 64», dokumentasjonen VIC-II-modellen bygger på.</dd>
+      <dt>Philip «Pepto» Timmermann</dt><dd>Fargepaletten, basert på hans målinger av VIC-II-fargene.</dd>
+      <dt>«No More Secrets»</dt><dd>Dokumentasjonen av NMOS 6510 sine udokumenterte instruksjoner (groepaz m.fl.), brukt som referanse.</dd>
+      <dt>Wolfgang Lorenz</dt><dd>Testsuiten for C64-emulatorer (offentlig eie), via VICE-testprogs. Brukt til å verifisere CPU, CIA og interrupt-timing; ikke inkludert.</dd>
+      <dt>Klaus Dormann</dt><dd>6502 functional test, brukt til å verifisere prosessoren; ikke inkludert.</dd>
+      <dt>Lasse Öörni (Cadaver)</dt><dd>c64gameframework. Eksempelspillet ble brukt til å teste 1541-emuleringen og hurtiglasteren; ikke inkludert.</dd>
+      <dt>Chivo</dt><dd>Skrifttype av Omnibus-Type, SIL Open Font License 1.1, levert av Google Fonts.</dd>
+    </dl>
+    <h3>ROM-filer og varemerker</h3>
+    <p>ROM-filene (BASIC, KERNAL, tegnsett og 1541 DOS) er Commodores opphavsrettsbeskyttede verk. De er ikke en del av emulatoren eller lisensen, og følger ikke med; du legger dem inn selv. «Commodore» og «Commodore 64» er varemerker for sine respektive eiere. Prosjektet er ikke tilknyttet dem.</p>`,
+      licenseH: 'Hele lisensteksten (GPL-2.0)',
+      sNoFiles: n => `${n}: fant ingen .d64-, .prg- eller ROM-filer`,
+      sBadSize: (n, l) => `${n}: ukjent filstørrelse (${l} byte)`,
+      sDriveOn: '1541-ROM lagt inn: ekte diskettstasjon er på',
+      sMissing: 'Mangler fortsatt noen ROM-filer',
+      mode: { hybrid: '1541: ekte + rask LOAD', real: '1541: helt ekte', off: '1541: av (rask)' },
+      modeMsg: { hybrid: 'Ekte 1541 med rask LOAD-kommando (anbefalt). Maskinen er startet på nytt.',
+                 real: 'Helt ekte 1541: også vanlig LOAD går i originalhastighet (turbo er på mens disken går). Maskinen er startet på nytt.',
+                 off: 'Diskettstasjonen er av: bare rask LOAD, hurtiglastere fungerer ikke. Maskinen er startet på nytt.' },
+      sDisks: (k, n) => `${k} disker funnet. ${n} er satt inn; bytt med disk-velgeren når spillet ber om det.`,
+      sRomsFirst: 'Legg inn ROM-filene først',
+      sSwapped: n => `Disk byttet: ${n}`,
+      sNoPrograms: n => `${n} satt inn – disken har ingen programmer`,
+      sLoading: n => `Laster og starter ${n}`,
+      sLoadedDisk: n => `${n} lastet – skriv SYS-adressen eller LIST`,
+      sTooBig: n => `${n} er for stor`,
+      sRunning: n => `Kjører ${n}`,
+      sLoadedAt: (n, h, d) => `${n} lastet til $${h} – start med SYS ${d}`,
+      sJoyOn: p => `Joystick på i port ${p}: piltaster og mellomrom`,
+      sJoyOff: 'Joystick av: piltaster og mellomrom er tastatur igjen',
+      sNoSound: 'Nettleseren tillater ikke lyd her',
+      sPort: p => `Joystick i port ${p}`,
+      sKey: k => `Tast: ${k}`,
+      pastePrompt: 'Lim inn teksten her (hold fingeren i feltet og velg «Lim inn»), og trykk OK:',
+      sPasting: n => `Limer inn ${n} tegn …`,
+      sTip: 'Tips: legg inn 1541-ROM under «Bytt ROM-filer» for spill med hurtiglastere',
+      sWaiting: 'Venter på ROM-filer',
+      eZip: 'ikke en gyldig zip-fil', eZipPw: 'passordbeskyttede zip-filer støttes ikke', eZipOld: 'nettleseren kan ikke pakke ut zip (for gammel versjon)',
+      eD64: 'ikke en D64-fil',
+      langBtn: 'English', langCode: 'en'
+    }
+  };
+  let lang = 'en';
+  try { const v = localStorage.getItem('c64.lang'); if (v && I18N[v]) lang = v; } catch (e) {}
+  const T = () => I18N[lang];
+  function applyLang() {
+    const L = T();
+    document.documentElement.lang = lang;
+    document.title = lang === 'no' ? 'C64 i nettleseren' : 'C64 in the browser';
+    document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = L[el.dataset.i18n]; });
+    document.querySelectorAll('[data-i18n-aria]').forEach(el => el.setAttribute('aria-label', L[el.dataset.i18nAria]));
+    document.querySelectorAll('[data-i18n-title]').forEach(el => el.setAttribute('title', L[el.dataset.i18nTitle]));
+    const lb = $('langbtn'); lb.textContent = L.langBtn; lb.lang = L.langCode;
+    if (typeof refreshLabels === 'function') refreshLabels();
+    if (typeof statusMsg === 'function') $('status').textContent = statusMsg();
+  }
+
 
   // ---- ROM storage (IndexedDB, private to this browser) ----
   function db() { return new Promise((res, rej) => { const r = indexedDB.open('c64emu', 1);
@@ -1983,7 +2135,7 @@ function parseD64(img) {
     const u8 = new Uint8Array(buf), dv = new DataView(buf);
     let e = -1;
     for (let i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--) if (dv.getUint32(i, true) === 0x06054b50) { e = i; break; }
-    if (e < 0) throw new Error('ikke en gyldig zip-fil');
+    if (e < 0) throw new Error(T().eZip);
     const n = dv.getUint16(e + 10, true); let p = dv.getUint32(e + 16, true);
     const out = [];
     for (let k = 0; k < n; k++) {
@@ -1994,13 +2146,13 @@ function parseD64(img) {
       p += 46 + nlen + xlen + clen;
       const name = path.split('/').pop();
       if (!name || path.includes('__MACOSX') || name.startsWith('._')) continue;
-      if (flags & 1) throw new Error('passordbeskyttede zip-filer støttes ikke');
+      if (flags & 1) throw new Error(T().eZipPw);
       const start = lho + 30 + dv.getUint16(lho + 26, true) + dv.getUint16(lho + 28, true);
       const data = u8.subarray(start, start + csize);
       let bytes;
       if (method === 0) bytes = data.slice();
       else if (method === 8) {
-        if (typeof DecompressionStream === 'undefined') throw new Error('nettleseren kan ikke pakke ut zip (for gammel versjon)');
+        if (typeof DecompressionStream === 'undefined') throw new Error(T().eZipOld);
         bytes = new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
       } else continue;
       out.push(new File([bytes], name));
@@ -2013,7 +2165,7 @@ function parseD64(img) {
       if (!/\.zip$/i.test(f.name)) { out.push(f); continue; }
       try {
         const inner = (await unzip(await f.arrayBuffer())).filter(x => /\.(d64|prg|bin|rom)$/i.test(x.name));
-        if (!inner.length) status(`${f.name}: fant ingen .d64-, .prg- eller ROM-filer`);
+        if (!inner.length) status(() => T().sNoFiles(f.name));
         inner.sort((a, b) => a.name.localeCompare(b.name, 'no', { numeric: true }));
         out.push(...inner);
       } catch (err) { status(`${f.name}: ${err.message}`); }
@@ -2040,21 +2192,20 @@ function parseD64(img) {
         else if (isBasic(d) || name.includes('basic')) roms.basic = d; else roms.kernal = d;
         if (roms.driveLo && roms.driveHi) { roms.drive = new Uint8Array(16384); roms.drive.set(roms.driveLo); roms.drive.set(roms.driveHi, 8192); }
         romTouched = true;
-      } else status(`${f.name}: ukjent filstørrelse (${b.length} byte)`);
+      } else status(() => T().sBadSize(f.name, b.length));
     }
     if (disks.length) setDisks(disks);
     if (romTouched) {
       markRoms();
-      if (roms.basic && roms.kernal && roms.chargen) { await saveRoms(); $('setup').hidden = true; boot(); if (roms.drive) status('1541-ROM lagt inn: ekte diskettstasjon er på'); }
-      else status('Mangler fortsatt noen ROM-filer');
+      if (roms.basic && roms.kernal && roms.chargen) { await saveRoms(); $('setup').hidden = true; boot(); if (roms.drive) status(() => T().sDriveOn); }
+      else status(() => T().sMissing);
     }
   }
 
   // 1541 modes: 'hybrid' = real drive, but KERNAL LOAD is instant; 'real' = everything through the drive; 'off' = no drive
   let driveMode = 'hybrid', turbo = true;
   try { driveMode = localStorage.getItem('c64.drivemode') || 'hybrid'; } catch (e) {}
-  const MODE_LABEL = { hybrid: '1541: ekte + rask LOAD', real: '1541: helt ekte', off: '1541: av (rask)' };
-  function showDriveMode() { const b = $('drvmode'); b.hidden = !roms.drive; b.textContent = MODE_LABEL[driveMode]; }
+  function showDriveMode() { const b = $('drvmode'); b.hidden = !roms.drive; b.textContent = T().mode[driveMode]; }
   function applyDrive() {
     if (!c64) return;
     const on = roms.drive && driveMode !== 'off';
@@ -2077,31 +2228,31 @@ function parseD64(img) {
     list.forEach((d, i) => { const o = document.createElement('option'); o.value = i; o.textContent = d.name; sel.appendChild(o); });
     sel.hidden = list.length < 2;
     insertDisk(list[0].b, list[0].name);
-    if (list.length > 1) status(`${list.length} disker funnet. ${list[0].name} er satt inn; bytt med disk-velgeren når spillet ber om det.`);
+    if (list.length > 1) status(() => T().sDisks(list.length, list[0].name));
   }
   function insertDisk(b, fname, autoload = true) {
-    if (!running) { status('Legg inn ROM-filene først'); return; }
-    try { disk = parseD64(b); } catch (e) { status(`${fname}: ${e.message}`); return; }
+    if (!running) { status(() => T().sRomsFirst); return; }
+    try { disk = parseD64(b); } catch (e) { status(() => `${fname}: ${e.message === 'not a D64 file' ? T().eD64 : e.message}`); return; }
     diskRaw = b; diskName = fname;
     c64.attachDisk(disk); c64.insertDisk(b);
-    if (!autoload) { status(`Disk byttet: ${fname}`); return; }
+    if (!autoload) { status(() => T().sSwapped(fname)); return; }
     const first = disk.files.find(f => f.type === 2);
-    if (!first) { status(`${fname} satt inn – disken har ingen programmer`); return; }
+    if (!first) { status(() => T().sNoPrograms(fname)); return; }
     const basicStub = first.data[0] === 1 && first.data[1] === 8;
     typeText('LOAD"*",8,1\r' + (basicStub ? 'RUN\r' : ''));
-    status(basicStub ? `Laster og starter ${fname}` : `${fname} lastet – skriv SYS-adressen eller LIST`);
+    status(() => basicStub ? T().sLoading(fname) : T().sLoadedDisk(fname));
   }
 
   // ---- PRG loading ----
   function loadPrg(b, name) {
-    if (!running) { status('Legg inn ROM-filene først'); return; }
+    if (!running) { status(() => T().sRomsFirst); return; }
     const addr = b[0] | (b[1] << 8), len = b.length - 2, end = addr + len;
-    if (end > 0x10000) { status(`${name} er for stor`); return; }
+    if (end > 0x10000) { status(() => T().sTooBig(name)); return; }
     c64.ram.set(b.subarray(2), addr);
     if (addr === 0x0801) {
       for (const p of [0x2d, 0x2f, 0x31, 0xae]) { c64.ram[p] = end & 255; c64.ram[p + 1] = end >> 8; }
-      typeText('RUN\r'); status(`Kjører ${name}`);
-    } else status(`${name} lastet til $${addr.toString(16).toUpperCase()} – start med SYS ${addr}`);
+      typeText('RUN\r'); status(() => T().sRunning(name));
+    } else status(() => T().sLoadedAt(name, addr.toString(16).toUpperCase(), addr));
   }
 
   // ---- Keyboard ----
@@ -2126,12 +2277,12 @@ function parseD64(img) {
   let tjoy = 0;
   function applyJoy() { const v = joy | tjoy; if (c64) c64.setJoy(joyPort === 2 ? v : 0, joyPort === 1 ? v : 0); }
   function showJoy() {
-    const b = $('joy'); b.textContent = joyMode ? `Joystick på` : 'Joystick av'; b.setAttribute('aria-pressed', String(joyMode));
+    const b = $('joy'); b.textContent = joyMode ? T().joyOn : T().joyOff; b.setAttribute('aria-pressed', String(joyMode));
     $('joyport').textContent = `Port ${joyPort}`;
   }
   function setJoyMode(on) {
     joyMode = on; joy = 0; pressed.clear(); if (c64) { applyMatrix(); applyJoy(); }
-    showJoy(); status(on ? `Joystick på i port ${joyPort}: piltaster og mellomrom` : 'Joystick av: piltaster og mellomrom er tastatur igjen');
+    showJoy(); status(() => on ? T().sJoyOn(joyPort) : T().sJoyOff);
   }
 
   function mapKey(e) {
@@ -2212,7 +2363,7 @@ function parseD64(img) {
         const b = actx.createBuffer(1, 1, actx.sampleRate), src = actx.createBufferSource();
         src.buffer = b; src.connect(actx.destination); src.start(0);
       }
-    } catch (e) { status('Nettleseren tillater ikke lyd her'); }
+    } catch (e) { status(() => T().sNoSound); }
   }
   // iOS Safari accepts touchend/click (not touchstart/pointerdown) as permission to start sound
   window.addEventListener('pointerdown', ensureAudio);
@@ -2279,14 +2430,14 @@ function parseD64(img) {
   $('romfile').onchange = e => { handleFiles([...e.target.files]); e.target.value = ''; };
   $('sound').onclick = e => {
     const b = e.currentTarget; b.blur(); soundOn = !soundOn;
-    b.textContent = soundOn ? 'Lyd på' : 'Lyd av'; b.setAttribute('aria-pressed', String(soundOn));
+    b.textContent = soundOn ? T().soundOn : T().soundOff; b.setAttribute('aria-pressed', String(soundOn));
     if (soundOn) ensureAudio(); else if (actx) actx.suspend();
   };
   $('joy').onclick = e => { e.currentTarget.blur(); if (running) setJoyMode(!joyMode); };
   $('joyport').onclick = e => {
     e.currentTarget.blur(); joyPort = joyPort === 2 ? 1 : 2; joy = 0; applyJoy(); showJoy();
     try { localStorage.setItem('c64.joyport', String(joyPort)); } catch (err) {}
-    status(`Joystick i port ${joyPort}`);
+    status(() => T().sPort(joyPort));
   };
   showJoy();
   $('drvmode').onclick = e => {
@@ -2294,9 +2445,7 @@ function parseD64(img) {
     driveMode = driveMode === 'hybrid' ? 'real' : driveMode === 'real' ? 'off' : 'hybrid';
     try { localStorage.setItem('c64.drivemode', driveMode); } catch (err) {}
     if (running) boot();
-    status({ hybrid: 'Ekte 1541 med rask LOAD-kommando (anbefalt). Maskinen er startet på nytt.',
-             real: 'Helt ekte 1541: også vanlig LOAD går i originalhastighet (turbo er på mens disken går). Maskinen er startet på nytt.',
-             off: 'Diskettstasjonen er av: bare rask LOAD, hurtiglastere fungerer ikke. Maskinen er startet på nytt.' }[driveMode]);
+    status(() => T().modeMsg[driveMode]);
   };
   $('dlDisk').onclick = e => {
     e.currentTarget.blur();
@@ -2308,7 +2457,7 @@ function parseD64(img) {
   let touchMode = false;
   function setTouch(on) {
     touchMode = on; document.body.classList.toggle('touch', on);
-    const b = $('touchbtn'); b.textContent = on ? 'Touch på' : 'Touch av'; b.setAttribute('aria-pressed', String(on));
+    const b = $('touchbtn'); b.textContent = on ? T().touchOn : T().touchOff; b.setAttribute('aria-pressed', String(on));
     try { localStorage.setItem('c64.touch', on ? '1' : '0'); } catch (e) {}
   }
   { let pref = null; try { pref = localStorage.getItem('c64.touch'); } catch (e) {}
@@ -2358,7 +2507,7 @@ function parseD64(img) {
       let keys = b.dataset.k.split(' '), label = b.textContent;
       if (shiftLatch && b.closest('.tkeys')) { if (!keys.includes('LSH')) keys = ['LSH', ...keys]; label = 'SHIFT+' + label; setShift(false); }
       pressed.set(code, { keys, frame: frameNo, up: false, hold: 6 }); applyMatrix();
-      status(`Tast: ${label}`);
+      status(() => T().sKey(label));
     };
     const up = e => { if (!active) return; active = false; b.classList.remove('down'); const p = pressed.get(code); if (p) p.up = true; };
     if (useTouch && b.closest('.tkeys')) {
@@ -2373,11 +2522,11 @@ function parseD64(img) {
   });
   // Paste: read the clipboard (Safari shows a «Lim inn» bubble); if that's not allowed, ask in a dialog
   async function pasteText() {
-    if (!running) { status('Legg inn ROM-filene først'); return; }
+    if (!running) { status(() => T().sRomsFirst); return; }
     let t = null;
     try { if (navigator.clipboard && navigator.clipboard.readText) t = await navigator.clipboard.readText(); } catch (e) { t = null; }
-    if (!t) t = prompt('Lim inn teksten her (hold fingeren i feltet og velg «Lim inn»), og trykk OK:', '');
-    if (t) { typeText(t.replace(/\r\n/g, '\n')); status(`Limer inn ${t.length} tegn …`); }
+    if (!t) t = prompt(T().pastePrompt, '');
+    if (t) { typeText(t.replace(/\r\n/g, '\n')); status(() => T().sPasting(t.length)); }
   }
   document.querySelectorAll('.pastebtn').forEach(b => b.addEventListener('click', e => { e.preventDefault(); b.blur(); pasteText(); }));
   // phone keyboard: a hidden text field feeds the C64 keyboard buffer
@@ -2400,10 +2549,23 @@ function parseD64(img) {
   document.addEventListener('dragleave', () => $('setup').classList.remove('over'));
   document.addEventListener('drop', e => { e.preventDefault(); $('setup').classList.remove('over'); handleFiles([...e.dataTransfer.files]); });
 
+  // re-render the labels that depend on state when the language changes
+  function refreshLabels() {
+    showJoy(); showDriveMode();
+    const sb = $('sound'); sb.textContent = soundOn ? T().soundOn : T().soundOff;
+    const tb = $('touchbtn'); tb.textContent = touchMode ? T().touchOn : T().touchOff;
+  }
+  $('langbtn').onclick = e => {
+    e.currentTarget.blur(); lang = lang === 'en' ? 'no' : 'en';
+    try { localStorage.setItem('c64.lang', lang); } catch (err) {}
+    applyLang();
+  };
+  applyLang();
+
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
   loadRoms().then(r => {
-    if (r && r.basic && r.kernal && r.chargen) { Object.assign(roms, r); markRoms(); boot(); if (!roms.drive) status('Tips: legg inn 1541-ROM under «Bytt ROM-filer» for spill med hurtiglastere'); }
-    else { markRoms(); $('setup').hidden = false; status('Venter på ROM-filer'); }
+    if (r && r.basic && r.kernal && r.chargen) { Object.assign(roms, r); markRoms(); boot(); if (!roms.drive) status(() => T().sTip); }
+    else { markRoms(); $('setup').hidden = false; status(() => T().sWaiting); }
   });
 })();
 </script>

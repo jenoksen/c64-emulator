@@ -1,9 +1,9 @@
 /*
- * C64-emulator — D64-diskbilde (katalog og filer)
+ * C64 emulator — D64 disk image (directory and files)
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * Copyright (C) 2026 John Werner Enoksen <john@enoksen.no>
- * Utviklet med hjelp av Claude (Anthropic).
+ * Developed with the help of Claude (Anthropic).
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  */
 // ---- D64 disk image parser ----
 function parseD64(img) {
-  if (img.length < 174848) throw new Error('ikke en D64-fil');
+  if (img.length < 174848) throw new Error('not a D64 file');
   const spt = t => t <= 17 ? 21 : t <= 24 ? 19 : t <= 30 ? 18 : 17;
   const off = (t, s) => { let o = 0; for (let i = 1; i < t; i++) o += spt(i); return (o + s) * 256; };
   const ok = (t, s) => t >= 1 && t <= 40 && s < spt(Math.min(t, 35)) && off(t, s) + 256 <= img.length;

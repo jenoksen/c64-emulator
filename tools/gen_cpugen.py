@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: GPL-2.0-or-later
-# Lager src/cpugen.js fra src/cpu.js: samme 6510-kjerne, men som generator der hver busstilgang
-# er et yield-punkt, slik at 1541-stasjonen kan kjøres syklus for syklus flettet inn i C64-en.
+# Creates src/cpugen.js from src/cpu.js: the same 6510 core, but as a generator where every bus access
+# is a yield point, so the 1541 drive can run cycle by cycle interleaved with the C64.
 import re, pathlib
 root = pathlib.Path(__file__).resolve().parent.parent
 src = (root / 'src' / 'cpu.js').read_text(encoding='utf-8')
@@ -32,7 +32,7 @@ while True:
         depth += {'(': 1, ')': -1}.get(s[k], 0); k += 1
     s = s[:m.start()] + '(yield* ' + s[m.start():k] + ')' + s[k:]
     i = m.start() + 8 + (m.end() - m.start())
-header = src[:head_end].replace('MOS 6510-prosessor, syklusnøyaktig på bussnivå',
-  'GENERERT fil: 6510 som generator for 1541-stasjonen. Ikke rediger; lages av tools/gen_cpugen.py fra src/cpu.js')
+header = src[:head_end].replace('MOS 6510 CPU, cycle-exact at bus level',
+  'GENERATED file: 6510 as a generator for the 1541 drive. Do not edit; made by tools/gen_cpugen.py from src/cpu.js')
 (root / 'src' / 'cpugen.js').write_text(header + s, encoding='utf-8')
-print('Skrev src/cpugen.js')
+print('Wrote src/cpugen.js')
