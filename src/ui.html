@@ -1,0 +1,658 @@
+<!doctype html>
+<!--
+  C64-emulator — en Commodore 64-emulator i nettleseren
+  SPDX-License-Identifier: GPL-2.0-or-later
+  Copyright (C) 2026 John Werner Enoksen <john@enoksen.no>. Utviklet med hjelp av Claude (Anthropic).
+  Inneholder kode portert fra libsidplayfp (Copyright 2011-2013 Leandro Nini, 2007-2010 Antti Lankila,
+  2000 Simon White; GPL-2.0-or-later). Se avsnittet «Om, kreditering og lisens» nederst på siden.
+  Denne filen er selve kildekoden; den er ikke minifisert.
+-->
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>C64 i nettleseren</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --case:#DCD3C0; --case-edge:#C6BAA0; --ink:#3A2E24; --muted:#6F6253;
+  --key:#5B4636; --key-hi:#6E5643; --key-ink:#F3EBDC; --bezel:#24201C; --led:#D8332A; --led-off:#6B5A4C;
+  --drop:#EAE3D4;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --case:#27221D; --case-edge:#3A3229; --ink:#ECE3D2; --muted:#A99C8A; --key:#4C3B2E; --key-hi:#5E4A3A;
+  --bezel:#100E0C; --led-off:#4A3E34; --drop:#302922; } }
+:root[data-theme="dark"]{ --case:#27221D; --case-edge:#3A3229; --ink:#ECE3D2; --muted:#A99C8A; --key:#4C3B2E; --key-hi:#5E4A3A;
+  --bezel:#100E0C; --led-off:#4A3E34; --drop:#302922; }
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0; background:var(--case); color:var(--ink); font-family:Chivo, "Segoe UI", system-ui, sans-serif; line-height:1.5}
+main{max-width:980px; margin:0 auto; padding:24px 16px 48px}
+h1{font-weight:800; font-size:clamp(1.4rem,3.5vw,2rem); letter-spacing:-0.01em; margin:0 0 4px}
+.sub{color:var(--muted); margin:0 0 20px; max-width:62ch}
+.monitor{background:var(--bezel); border-radius:18px; padding:clamp(10px,2.5vw,28px); box-shadow:0 2px 0 var(--case-edge)}
+canvas{display:block; width:100%; aspect-ratio:384/272; image-rendering:pixelated; image-rendering:crisp-edges; border-radius:6px; background:#000}
+.deck{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:16px; padding:14px; border-radius:10px;
+  background:linear-gradient(var(--case-edge),var(--case-edge)) top/100% 3px no-repeat, var(--case)}
+.led{width:14px; height:6px; border-radius:2px; background:var(--led-off); margin-right:6px}
+.led.on{background:var(--led); box-shadow:0 0 8px var(--led)}
+button,.btn{font:600 0.95rem Chivo, system-ui, sans-serif; color:var(--key-ink); background:var(--key); border:0; border-radius:6px;
+  padding:9px 14px; cursor:pointer; box-shadow:inset 0 -3px 0 rgba(0,0,0,.28)}
+button:hover,.btn:hover{background:var(--key-hi)}
+button:focus-visible,.btn:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
+button:disabled{opacity:.45; cursor:default}
+#disksel{font:600 .9rem Chivo,system-ui,sans-serif; color:var(--key-ink); background:var(--key); border:0; border-radius:6px; padding:9px 10px; max-width:16em}
+#joy[aria-pressed="true"]{background:var(--led); color:#fff}
+.dled{font:600 .72rem Chivo,system-ui,sans-serif; color:var(--muted); padding:2px 6px 2px 16px; position:relative}
+.dled::before{content:""; position:absolute; left:4px; top:50%; width:8px; height:4px; margin-top:-2px; border-radius:1px; background:var(--led-off)}
+.dled.on::before{background:var(--led); box-shadow:0 0 6px var(--led)}
+#status{color:var(--muted); font-size:.9rem; margin-left:auto; min-height:1.4em}
+#setup{margin-top:20px; padding:20px; border:2px dashed var(--case-edge); border-radius:12px; background:var(--drop)}
+#setup.over{border-color:var(--ink)}
+#setup h2{margin:0 0 6px; font-size:1.15rem}
+#setup p{margin:0 0 12px; max-width:64ch}
+.roms{list-style:none; padding:0; margin:0 0 16px; display:grid; gap:6px}
+.roms li{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap}
+.roms .mark{width:1.2em; font-weight:800}
+.roms strong{color:var(--ink); font-weight:600; min-width:5.5em}
+.roms span.d{color:var(--muted); font-size:.92rem}
+details{margin-top:18px; color:var(--muted)}
+summary{cursor:pointer; color:var(--ink); font-weight:600}
+dl{display:grid; grid-template-columns:max-content 1fr; gap:4px 16px; margin:10px 0 0}
+dt{font-weight:600; color:var(--ink)} dd{margin:0}
+kbd{font:inherit; font-size:.9em; padding:0 5px; border:1px solid var(--case-edge); border-radius:4px; background:var(--drop)}
+[hidden]{display:none!important}
+.about{margin-top:18px; color:var(--ink)}
+.about h3{font-size:1rem; margin:16px 0 6px}
+.about p{max-width:70ch}
+.about a{color:var(--ink)}
+.credits{display:grid; grid-template-columns:max-content 1fr; gap:6px 16px; margin:0}
+.credits dt{font-weight:600} .credits dd{margin:0; color:var(--muted)}
+@media (max-width:560px){.credits{grid-template-columns:1fr} .credits dd{margin-bottom:6px}}
+.license{white-space:pre-wrap; font-size:.78rem; max-height:50vh; overflow:auto; background:var(--drop); padding:12px; border-radius:8px}
+/* touch play mode */
+.tp,.tkeys{display:none}
+.dkeys{display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; align-items:center}
+.dkeys button{padding:7px 10px; font-size:.8rem; user-select:none; -webkit-user-select:none}
+.dkeys button.down{background:var(--led)}
+.dkeys .sep{width:10px}
+body.touch .dkeys{display:none}
+#kbd{position:fixed; left:0; bottom:0; width:1px; height:1px; opacity:0; border:0; padding:0; resize:none; font-size:16px}
+body.touch main{max-width:none; padding:10px 10px 40px}
+body.touch .play{display:grid; grid-template-columns:1fr 1fr; grid-template-areas:"center center" "left right"; gap:12px 8px; align-items:center}
+body.touch .center{grid-area:center} body.touch .tp-left{grid-area:left} body.touch .tp-right{grid-area:right}
+body.touch .tp{display:flex; flex-direction:column; gap:12px; align-items:center; justify-content:center; touch-action:none; user-select:none; -webkit-user-select:none}
+body.touch .tkeys{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; max-width:100%}
+.tkeys button{padding:9px 10px; font-size:.8rem; touch-action:none; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none}
+.tkeys button.down,#tshift[aria-pressed="true"]{background:var(--led); color:#fff}
+.stick{position:relative; width:min(42vw,170px); aspect-ratio:1; border-radius:50%; background:radial-gradient(circle at 50% 50%, var(--case-edge) 0 34%, var(--bezel) 35% 100%); box-shadow:inset 0 0 0 3px var(--key); touch-action:none}
+.knob{position:absolute; left:50%; top:50%; width:44%; aspect-ratio:1; margin:-22% 0 0 -22%; border-radius:50%; background:var(--led); box-shadow:0 3px 0 rgba(0,0,0,.35), inset 0 -4px 0 rgba(0,0,0,.25); pointer-events:none}
+.fire{width:min(30vw,120px); aspect-ratio:1; border-radius:50%; font-size:1.05rem; font-weight:800; background:var(--led); color:#fff; touch-action:none; -webkit-user-select:none; user-select:none; box-shadow:0 4px 0 rgba(0,0,0,.35), inset 0 -5px 0 rgba(0,0,0,.25)}
+.fire.down{transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.35), inset 0 -2px 0 rgba(0,0,0,.25)}
+body.touch h1, body.touch .sub{display:none}
+@media (orientation: landscape){
+  body.touch .play{grid-template-columns:1fr auto 1fr; grid-template-areas:"left center right"; min-height:calc(100dvh - 20px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+  body.touch .monitor{padding:6px; border-radius:10px; width:fit-content}
+  body.touch canvas{height:calc(100dvh - 92px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)); width:auto; max-width:100%}
+  body.touch .stick{width:min(20vw,150px, 42dvh)} body.touch .fire{width:min(13vw,110px, 30dvh)} body.touch canvas{height:calc(100dvh - 34px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>Commodore 64</h1>
+  <p class="sub">En C64-emulator skrevet fra bunnen av i JavaScript: 6510-prosessor, VIC-II-grafikk med sprites, SID-lyd, to CIA-brikker, tastatur og en fullt emulert 1541-diskettstasjon som også takler hurtiglastere.</p>
+
+  <div class="play">
+    <div class="tp tp-left">
+      <div class="stick" id="stick" aria-label="Virtuell joystick"><div class="knob" id="knob"></div></div>
+      <div class="tkeys"><button data-k="STOP">RUN/STOP</button><button id="tshift" aria-pressed="false">SHIFT</button><button data-k="F1">F1</button><button data-k="F3">F3</button><button data-k="F5">F5</button><button data-k="F7">F7</button></div>
+    </div>
+    <div class="center">
+      <div class="monitor"><canvas id="screen" width="384" height="272" aria-label="C64-skjerm"></canvas></div>
+      <div class="dkeys" aria-label="C64-taster">
+        <button data-k="F1">F1</button><button data-k="LSH F1">F2</button><button data-k="F3">F3</button><button data-k="LSH F3">F4</button>
+        <button data-k="F5">F5</button><button data-k="LSH F5">F6</button><button data-k="F7">F7</button><button data-k="LSH F7">F8</button>
+        <span class="sep"></span>
+        <button data-k="STOP">RUN/STOP</button><button data-restore="1">RESTORE</button><button data-k="HOME">CLR/HOME</button><button data-k="CBM">C=</button><button class="pastebtn">Lim inn tekst</button>
+      </div>
+    </div>
+    <div class="tp tp-right">
+      <button class="fire" id="fire" aria-label="Fyr">FYR</button>
+      <div class="tkeys"><button data-k="RET">RETURN</button><button data-k="SPC">SPACE</button><button data-k="Y">Y</button><button data-k="N">N</button><button id="kbdbtn" aria-label="Vis tastatur">⌨︎</button><button class="pastebtn">Lim inn</button></div>
+    </div>
+  </div>
+  <textarea id="kbd" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" aria-hidden="true"></textarea>
+
+  <div class="deck">
+    <span class="led" id="led" aria-hidden="true"></span>
+    <button id="reset" disabled>Slå av og på</button>
+    <button id="loadprg" disabled>Last inn program</button>
+    <span class="dled" id="dled" title="1541">1541</span>
+    <button id="drvmode" title="Hvordan diskettstasjonen emuleres" hidden>1541: rask</button>
+    <button id="dlDisk" hidden>Last ned disk</button>
+    <select id="disksel" hidden aria-label="Velg disk"></select>
+    <button id="touchbtn" aria-pressed="false">Touch av</button>
+    <button id="joy" aria-pressed="false" title="Tapp høyre Option for å bytte">Joystick av</button>
+    <button id="joyport" title="Hvilken joystickport spillet bruker">Port 2</button>
+    <button id="sound" aria-pressed="true">Lyd på</button>
+    <button id="romsbtn">Bytt ROM-filer</button>
+    <input type="file" id="prgfile" accept=".prg,.d64,.zip" hidden>
+    <span id="status" role="status"></span>
+  </div>
+
+  <section id="setup" hidden>
+    <h2>Legg inn ROM-filene</h2>
+    <p>Emulatoren trenger innholdet i tre ROM-brikker fra en C64. ROM-filene er Commodores opphavsrettsbeskyttede verk og følger ikke med. Bruk filer du har rett til å bruke, for eksempel lest ut fra din egen maskin, og slipp dem her. De lagres bare i denne nettleseren, så du gjør det én gang.</p>
+    <ul class="roms">
+      <li><span class="mark" id="m-basic">·</span><strong>BASIC</strong><span class="d">BASIC V2-tolkeren, 8 kB (Commodore 901226-01)</span></li>
+      <li><span class="mark" id="m-kernal">·</span><strong>KERNAL</strong><span class="d">Operativsystemet, 8 kB (Commodore 901227-03, eller en nasjonal variant)</span></li>
+      <li><span class="mark" id="m-chargen">·</span><strong>Tegnsett</strong><span class="d">Tegngeneratoren, 4 kB (Commodore 901225-01)</span></li>
+      <li><span class="mark" id="m-drive">·</span><strong>1541 DOS</strong><span class="d">Valgfri: 16 kB fra en 1541-diskettstasjon, for ekte diskettstasjon og hurtiglastere (for eksempel 1541-II 251968-03, eller de to halvdelene 325302-01 og 901229-05)</span></li>
+    </ul>
+    <label class="btn" for="romfile">Velg filer</label>
+    <input type="file" id="romfile" multiple hidden>
+    <span class="d" style="margin-left:8px;color:var(--muted)">eller dra dem inn på siden</span>
+  </section>
+
+  <details>
+    <summary>Tastatur og kontroller</summary>
+    <dl>
+      <dt><kbd>Esc</kbd></dt><dd>RUN/STOP (sammen med <kbd>PgUp</kbd> for RUN/STOP + RESTORE)</dd>
+      <dt><kbd>PgUp</kbd></dt><dd>RESTORE</dd>
+      <dt><kbd>Tab</kbd></dt><dd>CTRL</dd>
+      <dt>venstre <kbd>Alt</kbd></dt><dd>Commodore-tasten (C=)</dd>
+      <dt><kbd>Home</kbd> / <kbd>End</kbd></dt><dd>HOME / CLR</dd>
+      <dt><kbd>Insert</kbd></dt><dd>INST</dd>
+      <dt><kbd>F1</kbd>–<kbd>F8</kbd></dt><dd>Funksjonstastene. På Mac må du holde <kbd>fn</kbd>, eller bruke <kbd>Ctrl</kbd>+<kbd>1</kbd>–<kbd>8</kbd>, eller knappene under skjermen.</dd>
+      <dt>Piltastene</dt><dd>Markøren</dd>
+      <dt><kbd>§</kbd> eller <kbd>`</kbd></dt><dd>Venstrepil (←)</dd>
+      <dt>Høyre <kbd>Option</kbd> (kort trykk)</dt><dd>Slår joystick-modus av og på. I joystick-modus styrer piltastene og <kbd>mellomrom</kbd> er fyr. Resten av tastaturet virker som vanlig.</dd>
+      <dt>Port 1 / Port 2</dt><dd>De fleste spill bruker port 2. Hvis ingenting skjer når du styrer, bytt port med knappen.</dd>
+      <dt>Numpad <kbd>8</kbd> <kbd>2</kbd> <kbd>4</kbd> <kbd>6</kbd> <kbd>0</kbd></dt><dd>Joystick alltid, 0 er fyr</dd>
+      <dt>Mobil</dt><dd>«Touch på» viser virtuell joystick (venstre) og fyrknapp (høyre), og knapper for RUN/STOP, RETURN, SPACE, F1–F7, Y og N. SHIFT gjelder neste tast, så SHIFT + F1 gir F2. Lyden starter når du slipper første trykk; på iPhone med eldre iOS må stillebryteren være av. ⌨︎ åpner telefonens tastatur for å skrive. Snu telefonen på tvers for størst skjerm.</dd>
+      <dt>«Lim inn»</dt><dd>Knappen limer inn tekst fra utklippstavlen, for eksempel et BASIC-program, som om du skrev det. Fungerer også på mobil.</dd>
+      <dt><kbd>Ctrl</kbd>+<kbd>V</kbd></dt><dd>Limer inn tekst, for eksempel et BASIC-program</dd>
+    </dl>
+    <p>Diskettstasjonen: med 1541-ROM lagt inn emuleres en ekte 1541 med egen prosessor, så spill med hurtiglastere fungerer. Knappen for 1541-modus velger mellom «ekte + rask LOAD» (anbefalt: vanlige LOAD-kommandoer går lynraskt, alt annet går gjennom den ekte stasjonen), «helt ekte» og «av». Mens disken går, kjører emulatoren i turbo uten lyd. Lampen ved «1541» lyser når stasjonen arbeider. Lagrer et program noe på disken, dukker knappen «Last ned disk» opp.</p>
+    <p>Skilletegn følger tegnet du faktisk skriver, så norsk tastatur fungerer som forventet. Programfiler (.prg), diskbilder (.d64) og .zip-filer med slike kan dras rett inn på siden. Zip-filer pakkes ut automatisk, og inneholder de flere disker får du en disk-velger for å bytte diskside. Med en disk inne fungerer <code>LOAD"$",8</code> og <code>LIST</code> for å se innholdet, og <code>LOAD"NAVN",8,1</code> for å laste et bestemt program.</p>
+  </details>
+  <details class="about" id="about">
+    <summary>Om, kreditering og lisens</summary>
+    <p><strong>Åpen kildekode.</strong> Emulatoren er fri programvare under <a href="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html" target="_blank" rel="noopener">GNU General Public License versjon 2</a> eller (etter ditt valg) en senere versjon. Denne HTML-filen er selve kildekoden: du kan lese, endre og dele den på de samme vilkårene. Den gis uten noen form for garanti.</p>
+    <p>Copyright © 2026 John Werner Enoksen (<a href="mailto:john@enoksen.no">john@enoksen.no</a>). Utviklet med hjelp av Claude (Anthropic).</p>
+    <h3>Kreditering</h3>
+    <dl class="credits">
+      <dt>libsidplayfp</dt><dd>Leandro Nini, Antti Lankila og Simon White. Tilstandsmaskinen for CIA-timerne er portert fra prosjektets <code>timer.cpp</code> (GPL-2.0-or-later), med opprinnelig opphavsrettsmerknad bevart i koden. <a href="https://github.com/libsidplayfp/libsidplayfp" target="_blank" rel="noopener">github.com/libsidplayfp</a></dd>
+      <dt>Christian Bauer</dt><dd>«The MOS 6567/6569 video controller (VIC-II) and its application in the Commodore 64», dokumentasjonen VIC-II-modellen bygger på.</dd>
+      <dt>Philip «Pepto» Timmermann</dt><dd>Fargepaletten, basert på hans målinger av VIC-II-fargene.</dd>
+      <dt>«No More Secrets»</dt><dd>Dokumentasjonen av NMOS 6510 sine udokumenterte instruksjoner (groepaz m.fl.), brukt som referanse.</dd>
+      <dt>Wolfgang Lorenz</dt><dd>Testsuiten for C64-emulatorer (offentlig eie), via VICE-testprogs. Brukt til å verifisere CPU, CIA og interrupt-timing; ikke inkludert.</dd>
+      <dt>Klaus Dormann</dt><dd>6502 functional test, brukt til å verifisere prosessoren; ikke inkludert.</dd>
+      <dt>Lasse Öörni (Cadaver)</dt><dd>c64gameframework. Eksempelspillet ble brukt til å teste 1541-emuleringen og hurtiglasteren; ikke inkludert.</dd>
+      <dt>Chivo</dt><dd>Skrifttype av Omnibus-Type, SIL Open Font License 1.1, levert av Google Fonts.</dd>
+    </dl>
+    <h3>ROM-filer og varemerker</h3>
+    <p>ROM-filene (BASIC, KERNAL, tegnsett og 1541 DOS) er Commodores opphavsrettsbeskyttede verk. De er ikke en del av emulatoren eller lisensen, og følger ikke med; du legger dem inn selv. «Commodore» og «Commodore 64» er varemerker for sine respektive eiere. Prosjektet er ikke tilknyttet dem.</p>
+    <details><summary>Hele lisensteksten (GPL-2.0)</summary><pre class="license"><!--LICENSE_TEXT--></pre></details>
+  </details>
+</main>
+<script>
+/*CORE*/
+</script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const canvas = $('screen'), ctx = canvas.getContext('2d');
+  const img = ctx.createImageData(W, H), img32 = new Uint32Array(img.data.buffer);
+  const roms = { basic: null, kernal: null, chargen: null, drive: null, driveLo: null, driveHi: null };
+  let c64 = null, running = false, frameNo = 0;
+  const typeQ = [];
+  const status = t => { $('status').textContent = t; };
+
+  // ---- ROM storage (IndexedDB, private to this browser) ----
+  function db() { return new Promise((res, rej) => { const r = indexedDB.open('c64emu', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('roms'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+  async function saveRoms() { try { const d = await db(); d.transaction('roms', 'readwrite').objectStore('roms').put({ ...roms }, 'set'); } catch (e) {} }
+  async function loadRoms() { try { const d = await db(); return await new Promise(res => {
+      const g = d.transaction('roms').objectStore('roms').get('set'); g.onsuccess = () => res(g.result || null); g.onerror = () => res(null); }); }
+    catch (e) { return null; } }
+
+  function markRoms() { for (const k of ['basic', 'kernal', 'chargen', 'drive']) $('m-' + k).textContent = roms[k] ? '✓' : '·'; }
+  const hasStr = (b, str) => { const t = [...str].map(c => c.charCodeAt(0)); outer: for (let i = 0; i <= b.length - t.length; i++) { for (let k = 0; k < t.length; k++) if (b[i + k] !== t[k]) continue outer; return true; } return false; };
+  const isBasic = b => String.fromCharCode(...b.slice(4, 12)) === 'CBMBASIC';
+
+  // ---- ZIP: read the central directory; deflate is unpacked with the browser's DecompressionStream ----
+  async function unzip(buf) {
+    const u8 = new Uint8Array(buf), dv = new DataView(buf);
+    let e = -1;
+    for (let i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--) if (dv.getUint32(i, true) === 0x06054b50) { e = i; break; }
+    if (e < 0) throw new Error('ikke en gyldig zip-fil');
+    const n = dv.getUint16(e + 10, true); let p = dv.getUint32(e + 16, true);
+    const out = [];
+    for (let k = 0; k < n; k++) {
+      if (dv.getUint32(p, true) !== 0x02014b50) break;
+      const flags = dv.getUint16(p + 8, true), method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true);
+      const nlen = dv.getUint16(p + 28, true), xlen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true), lho = dv.getUint32(p + 42, true);
+      const path = new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nlen));
+      p += 46 + nlen + xlen + clen;
+      const name = path.split('/').pop();
+      if (!name || path.includes('__MACOSX') || name.startsWith('._')) continue;
+      if (flags & 1) throw new Error('passordbeskyttede zip-filer støttes ikke');
+      const start = lho + 30 + dv.getUint16(lho + 26, true) + dv.getUint16(lho + 28, true);
+      const data = u8.subarray(start, start + csize);
+      let bytes;
+      if (method === 0) bytes = data.slice();
+      else if (method === 8) {
+        if (typeof DecompressionStream === 'undefined') throw new Error('nettleseren kan ikke pakke ut zip (for gammel versjon)');
+        bytes = new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
+      } else continue;
+      out.push(new File([bytes], name));
+    }
+    return out;
+  }
+  async function expandZips(list) {
+    const out = [];
+    for (const f of list) {
+      if (!/\.zip$/i.test(f.name)) { out.push(f); continue; }
+      try {
+        const inner = (await unzip(await f.arrayBuffer())).filter(x => /\.(d64|prg|bin|rom)$/i.test(x.name));
+        if (!inner.length) status(`${f.name}: fant ingen .d64-, .prg- eller ROM-filer`);
+        inner.sort((a, b) => a.name.localeCompare(b.name, 'no', { numeric: true }));
+        out.push(...inner);
+      } catch (err) { status(`${f.name}: ${err.message}`); }
+    }
+    return out;
+  }
+
+  async function handleFiles(list) {
+    let romTouched = false;
+    list = await expandZips(list);
+    const disks = [];
+    for (const f of list) {
+      const b = new Uint8Array(await f.arrayBuffer()), name = f.name.toLowerCase();
+      if (name.endsWith('.prg')) { loadPrg(b, f.name); continue; }
+      if (name.endsWith('.d64')) { disks.push({ name: f.name, b }); continue; }
+      if (b.length === 4096) { roms.chargen = b; romTouched = true; }
+      else if (b.length === 16384) {
+        if (hasStr(b, 'DOS V2')) roms.drive = b; else { roms.basic = b.slice(0, 8192); roms.kernal = b.slice(8192); }
+        romTouched = true; }
+      else if (b.length === 8192 || b.length === 8194) {
+        const d = b.length === 8194 ? b.slice(2) : b;
+        if (hasStr(d, 'DOS V2')) roms.driveHi = d;
+        else if (/325302|1541|1540|c000/.test(name) && !isBasic(d)) roms.driveLo = d;
+        else if (isBasic(d) || name.includes('basic')) roms.basic = d; else roms.kernal = d;
+        if (roms.driveLo && roms.driveHi) { roms.drive = new Uint8Array(16384); roms.drive.set(roms.driveLo); roms.drive.set(roms.driveHi, 8192); }
+        romTouched = true;
+      } else status(`${f.name}: ukjent filstørrelse (${b.length} byte)`);
+    }
+    if (disks.length) setDisks(disks);
+    if (romTouched) {
+      markRoms();
+      if (roms.basic && roms.kernal && roms.chargen) { await saveRoms(); $('setup').hidden = true; boot(); if (roms.drive) status('1541-ROM lagt inn: ekte diskettstasjon er på'); }
+      else status('Mangler fortsatt noen ROM-filer');
+    }
+  }
+
+  // 1541 modes: 'hybrid' = real drive, but KERNAL LOAD is instant; 'real' = everything through the drive; 'off' = no drive
+  let driveMode = 'hybrid', turbo = true;
+  try { driveMode = localStorage.getItem('c64.drivemode') || 'hybrid'; } catch (e) {}
+  const MODE_LABEL = { hybrid: '1541: ekte + rask LOAD', real: '1541: helt ekte', off: '1541: av (rask)' };
+  function showDriveMode() { const b = $('drvmode'); b.hidden = !roms.drive; b.textContent = MODE_LABEL[driveMode]; }
+  function applyDrive() {
+    if (!c64) return;
+    const on = roms.drive && driveMode !== 'off';
+    c64.setDriveRom(on ? roms.drive : null);
+    c64.setTrap(driveMode !== 'real');
+    if (on && diskRaw) c64.insertDisk(diskRaw);
+    showDriveMode();
+  }
+  function boot() {
+    c64 = makeC64(roms); if (disk) c64.attachDisk(disk); applyDrive(); if (actx) c64.sid.setRate(actx.sampleRate); c64.powerOn(); nextT = 0; running = true; frameNo = 0; typeQ.length = 0; pressed.clear();
+    $('led').classList.add('on'); $('reset').disabled = false; $('loadprg').disabled = false; status('');
+  }
+
+  // ---- Disk images ----
+  let disk = null, diskRaw = null, diskName = 'disk.d64';
+  let diskList = [];
+  function setDisks(list) {
+    diskList = list;
+    const sel = $('disksel'); sel.innerHTML = '';
+    list.forEach((d, i) => { const o = document.createElement('option'); o.value = i; o.textContent = d.name; sel.appendChild(o); });
+    sel.hidden = list.length < 2;
+    insertDisk(list[0].b, list[0].name);
+    if (list.length > 1) status(`${list.length} disker funnet. ${list[0].name} er satt inn; bytt med disk-velgeren når spillet ber om det.`);
+  }
+  function insertDisk(b, fname, autoload = true) {
+    if (!running) { status('Legg inn ROM-filene først'); return; }
+    try { disk = parseD64(b); } catch (e) { status(`${fname}: ${e.message}`); return; }
+    diskRaw = b; diskName = fname;
+    c64.attachDisk(disk); c64.insertDisk(b);
+    if (!autoload) { status(`Disk byttet: ${fname}`); return; }
+    const first = disk.files.find(f => f.type === 2);
+    if (!first) { status(`${fname} satt inn – disken har ingen programmer`); return; }
+    const basicStub = first.data[0] === 1 && first.data[1] === 8;
+    typeText('LOAD"*",8,1\r' + (basicStub ? 'RUN\r' : ''));
+    status(basicStub ? `Laster og starter ${fname}` : `${fname} lastet – skriv SYS-adressen eller LIST`);
+  }
+
+  // ---- PRG loading ----
+  function loadPrg(b, name) {
+    if (!running) { status('Legg inn ROM-filene først'); return; }
+    const addr = b[0] | (b[1] << 8), len = b.length - 2, end = addr + len;
+    if (end > 0x10000) { status(`${name} er for stor`); return; }
+    c64.ram.set(b.subarray(2), addr);
+    if (addr === 0x0801) {
+      for (const p of [0x2d, 0x2f, 0x31, 0xae]) { c64.ram[p] = end & 255; c64.ram[p + 1] = end >> 8; }
+      typeText('RUN\r'); status(`Kjører ${name}`);
+    } else status(`${name} lastet til $${addr.toString(16).toUpperCase()} – start med SYS ${addr}`);
+  }
+
+  // ---- Keyboard ----
+  const K = { DEL:[0,0],RET:[0,1],CRT:[0,2],F7:[0,3],F1:[0,4],F3:[0,5],F5:[0,6],CDN:[0,7],
+    '3':[1,0],W:[1,1],A:[1,2],'4':[1,3],Z:[1,4],S:[1,5],E:[1,6],LSH:[1,7],
+    '5':[2,0],R:[2,1],D:[2,2],'6':[2,3],C:[2,4],F:[2,5],T:[2,6],X:[2,7],
+    '7':[3,0],Y:[3,1],G:[3,2],'8':[3,3],B:[3,4],H:[3,5],U:[3,6],V:[3,7],
+    '9':[4,0],I:[4,1],J:[4,2],'0':[4,3],M:[4,4],K:[4,5],O:[4,6],N:[4,7],
+    '+':[5,0],P:[5,1],L:[5,2],'-':[5,3],'.':[5,4],':':[5,5],'@':[5,6],',':[5,7],
+    '£':[6,0],'*':[6,1],';':[6,2],HOME:[6,3],RSH:[6,4],'=':[6,5],'↑':[6,6],'/':[6,7],
+    '1':[7,0],'←':[7,1],CTRL:[7,2],'2':[7,3],SPC:[7,4],CBM:[7,5],Q:[7,6],STOP:[7,7] };
+  const SHIFTED = { '!':'1','"':'2','#':'3','$':'4','%':'5','&':'6',"'":'7','(':'8',')':'9','<':',','>':'.','?':'/','[':':',']':';' };
+  const SPECIAL = { Enter:['RET'], Backspace:['DEL'], Delete:['DEL'], Insert:['LSH','DEL'], ArrowRight:['CRT'], ArrowLeft:['LSH','CRT'],
+    ArrowDown:['CDN'], ArrowUp:['LSH','CDN'], Home:['HOME'], End:['LSH','HOME'], Escape:['STOP'], Tab:['CTRL'], ' ':['SPC'],
+    F1:['F1'], F2:['LSH','F1'], F3:['F3'], F4:['LSH','F3'], F5:['F5'], F6:['LSH','F5'], F7:['F7'], F8:['LSH','F7'],
+    '^':['↑'], '`':['←'], '§':['←'], '|':['←'] };
+  const JOY = { Numpad8:1, Numpad2:2, Numpad4:4, Numpad6:8, Numpad0:16 };
+  const JOYMODE = { ArrowUp:1, ArrowDown:2, ArrowLeft:4, ArrowRight:8, Space:16 };
+  const isMac = /Mac/.test(navigator.platform || navigator.userAgent);
+  const pressed = new Map(); let joy = 0, joyMode = false, joyPort = 2, optTap = false;
+  try { joyPort = localStorage.getItem('c64.joyport') === '1' ? 1 : 2; } catch (e) {}
+  let tjoy = 0;
+  function applyJoy() { const v = joy | tjoy; if (c64) c64.setJoy(joyPort === 2 ? v : 0, joyPort === 1 ? v : 0); }
+  function showJoy() {
+    const b = $('joy'); b.textContent = joyMode ? `Joystick på` : 'Joystick av'; b.setAttribute('aria-pressed', String(joyMode));
+    $('joyport').textContent = `Port ${joyPort}`;
+  }
+  function setJoyMode(on) {
+    joyMode = on; joy = 0; pressed.clear(); if (c64) { applyMatrix(); applyJoy(); }
+    showJoy(); status(on ? `Joystick på i port ${joyPort}: piltaster og mellomrom` : 'Joystick av: piltaster og mellomrom er tastatur igjen');
+  }
+
+  function mapKey(e) {
+    if (e.code === 'AltLeft') return ['CBM'];
+    if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') return [];
+    if (SPECIAL[e.key]) return SPECIAL[e.key];
+    const k = e.key;
+    if (k.length === 1) {
+      if (/[a-z]/i.test(k)) return e.shiftKey ? ['LSH', k.toUpperCase()] : [k.toUpperCase()];
+      if (SHIFTED[k]) return ['LSH', SHIFTED[k]];
+      if (K[k]) return [k];
+    }
+    return null;
+  }
+  function applyMatrix() {
+    c64.keys.fill(0);
+    for (const p of pressed.values()) for (const n of p.keys) { const [c, r] = K[n]; c64.keys[c] |= 1 << r; }
+  }
+  window.addEventListener('keydown', e => {
+    if (e.code === 'AltRight') { optTap = true; e.preventDefault(); return; }
+    optTap = false;
+    if (running && isMac && e.ctrlKey && !e.metaKey && !e.altKey && /^Digit[1-8]$/.test(e.code)) {
+      const n = +e.code[5], keys = n % 2 ? ['F' + n] : ['LSH', 'F' + (n - 1)];
+      e.preventDefault(); if (!e.repeat) { pressed.set(e.code, { keys, frame: frameNo, up: false }); applyMatrix(); }
+      return;
+    }
+    if (!running || e.metaKey || (e.ctrlKey && !e.altKey)) return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    if (e.code in JOY) { joy |= JOY[e.code]; applyJoy(); e.preventDefault(); return; }
+    if (joyMode && e.code in JOYMODE) { joy |= JOYMODE[e.code]; applyJoy(); e.preventDefault();
+      if (document.activeElement && document.activeElement.tagName === 'BUTTON') document.activeElement.blur(); return; }
+    if (e.key === 'PageUp') { c64.restore(); e.preventDefault(); return; }
+    const keys = mapKey(e); if (!keys) return;
+    e.preventDefault();
+    if (document.activeElement && document.activeElement.tagName === 'BUTTON') document.activeElement.blur();
+    if (e.repeat && pressed.has(e.code)) return;
+    pressed.set(e.code, { keys, frame: frameNo, up: false }); applyMatrix();
+  });
+  window.addEventListener('keyup', e => {
+    if (e.code === 'AltRight') { if (optTap && running) setJoyMode(!joyMode); optTap = false; return; }
+    if (!running) return;
+    if (e.code in JOY) { joy &= ~JOY[e.code]; applyJoy(); return; }
+    if (e.code in JOYMODE) { joy &= ~JOYMODE[e.code]; applyJoy(); if (joyMode) return; }
+    const p = pressed.get(e.code); if (p) p.up = true;
+  });
+  window.addEventListener('blur', () => { pressed.clear(); joy = 0; optTap = false; if (c64) { applyJoy(); applyMatrix(); } });
+
+  // ---- Typing / paste via the keyboard buffer ----
+  function typeText(t) {
+    for (const ch of t) {
+      const c = ch.charCodeAt(0);
+      if (ch === '\n' || ch === '\r') { if (typeQ[typeQ.length - 1] !== 13 || ch === '\n') typeQ.push(13); }
+      else if (c >= 97 && c <= 122) typeQ.push(c - 32);
+      else if (ch === '£') typeQ.push(0x5c);
+      else if (ch === '\b') typeQ.push(20);
+      else if (c >= 0x20 && c <= 0x5d) typeQ.push(c);
+    }
+  }
+  window.addEventListener('paste', e => {
+    if (!running) return; const t = e.clipboardData.getData('text'); if (t) { typeText(t.replace(/\r\n/g, '\n')); e.preventDefault(); }
+  });
+
+  // ---- Audio (Web Audio; starts on the first click or keypress) ----
+  let actx = null, gainNode = null, nextT = 0, soundOn = true;
+  function ensureAudio() {
+    if (!soundOn) return;
+    try {
+      if (!actx) {
+        // iOS 17+: play even when the ringer switch is on silent
+        try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+        actx = new (window.AudioContext || window.webkitAudioContext)();
+        gainNode = actx.createGain(); gainNode.gain.value = 0.9; gainNode.connect(actx.destination);
+        if (c64) c64.sid.setRate(actx.sampleRate);
+      }
+      if (actx.state !== 'running') {
+        const r = actx.resume(); if (r && r.catch) r.catch(() => {});
+        // iOS only unlocks Web Audio when something is started inside the gesture: a 1-sample silent buffer
+        const b = actx.createBuffer(1, 1, actx.sampleRate), src = actx.createBufferSource();
+        src.buffer = b; src.connect(actx.destination); src.start(0);
+      }
+    } catch (e) { status('Nettleseren tillater ikke lyd her'); }
+  }
+  // iOS Safari accepts touchend/click (not touchstart/pointerdown) as permission to start sound
+  window.addEventListener('pointerdown', ensureAudio);
+  window.addEventListener('touchend', ensureAudio, { passive: true });
+  window.addEventListener('click', ensureAudio);
+  window.addEventListener('keydown', ensureAudio);
+  const audioLive = () => soundOn && actx && actx.state === 'running';
+  function flushAudio() {
+    const sid = c64.sid, n = sid.n; sid.n = 0;
+    if (!n || !audioLive()) return;
+    const b = actx.createBuffer(1, n, actx.sampleRate);
+    b.copyToChannel(sid.buf.subarray(0, n), 0);
+    const src = actx.createBufferSource(); src.buffer = b; src.connect(gainNode);
+    if (nextT < actx.currentTime + 0.01) nextT = actx.currentTime + 0.04;
+    src.start(nextT); nextT += n / actx.sampleRate;
+  }
+
+  // ---- Main loop ----
+  const FRAME_MS = (LINES * CPL) / 985.248;
+  let acc = 0, last = performance.now();
+  function runOne() {
+    frameNo++;
+    let changed = false;
+    for (const [code, p] of pressed) if (p.up && frameNo - p.frame >= (p.hold || 3)) { pressed.delete(code); changed = true; }
+    if (changed) applyMatrix();
+    if (typeQ.length && c64.ram[0xc6] === 0) { let n = 0;
+      while (n < 10 && typeQ.length) c64.ram[0x277 + n++] = typeQ.shift(); c64.ram[0xc6] = n; }
+    c64.runFrame();
+    flushAudio();
+  }
+  let turboOn = false;
+  function loop(now) {
+    const dt = Math.min(now - last, 100); last = now;
+    if (running) {
+      let ran = 0;
+      const drv = c64.drive, loading = turbo && drv && drv.motor;
+      if (loading) {
+        // Turbo while the disk spins: run as many frames as fit in ~14 ms, without sound
+        turboOn = true; const t0 = performance.now();
+        while (performance.now() - t0 < 14 && ran < 20) { runOne(); c64.sid.n = 0; ran++; }
+        acc = 0;
+      } else if (turboOn) { turboOn = false; nextT = 0; acc = 0; }
+      if (loading) {} else if (audioLive()) {
+        // The sound card's clock sets the pace, so audio never drifts or stutters
+        acc = 0;
+        if (nextT < actx.currentTime) nextT = actx.currentTime + 0.04;
+        while (nextT - actx.currentTime < 0.1 && ran < 5) { runOne(); ran++; }
+      } else {
+        acc += dt;
+        while (acc >= FRAME_MS) { acc -= FRAME_MS; runOne(); ran++; }
+      }
+      if (ran) { img32.set(c64.frame); ctx.putImageData(img, 0, 0); }
+      $('dled').classList.toggle('on', !!(drv && (drv.led || drv.motor)));
+      $('dlDisk').hidden = !(drv && drv.dirty);
+    } else acc = 0;
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  // ---- Wiring ----
+  $('reset').onclick = e => { e.currentTarget.blur(); boot(); };
+  $('loadprg').onclick = e => { e.currentTarget.blur(); $('prgfile').click(); };
+  $('prgfile').onchange = e => { handleFiles([...e.target.files]); e.target.value = ''; };
+  $('romfile').onchange = e => { handleFiles([...e.target.files]); e.target.value = ''; };
+  $('sound').onclick = e => {
+    const b = e.currentTarget; b.blur(); soundOn = !soundOn;
+    b.textContent = soundOn ? 'Lyd på' : 'Lyd av'; b.setAttribute('aria-pressed', String(soundOn));
+    if (soundOn) ensureAudio(); else if (actx) actx.suspend();
+  };
+  $('joy').onclick = e => { e.currentTarget.blur(); if (running) setJoyMode(!joyMode); };
+  $('joyport').onclick = e => {
+    e.currentTarget.blur(); joyPort = joyPort === 2 ? 1 : 2; joy = 0; applyJoy(); showJoy();
+    try { localStorage.setItem('c64.joyport', String(joyPort)); } catch (err) {}
+    status(`Joystick i port ${joyPort}`);
+  };
+  showJoy();
+  $('drvmode').onclick = e => {
+    e.currentTarget.blur();
+    driveMode = driveMode === 'hybrid' ? 'real' : driveMode === 'real' ? 'off' : 'hybrid';
+    try { localStorage.setItem('c64.drivemode', driveMode); } catch (err) {}
+    if (running) boot();
+    status({ hybrid: 'Ekte 1541 med rask LOAD-kommando (anbefalt). Maskinen er startet på nytt.',
+             real: 'Helt ekte 1541: også vanlig LOAD går i originalhastighet (turbo er på mens disken går). Maskinen er startet på nytt.',
+             off: 'Diskettstasjonen er av: bare rask LOAD, hurtiglastere fungerer ikke. Maskinen er startet på nytt.' }[driveMode]);
+  };
+  $('dlDisk').onclick = e => {
+    e.currentTarget.blur();
+    const img = c64.drive && c64.drive.exportD64(); if (!img) return;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([img], { type: 'application/octet-stream' }));
+    a.download = diskName.replace(/\.d64$/i, '') + '-lagret.d64'; a.click();
+  };
+  // ---- Touch controls ----
+  let touchMode = false;
+  function setTouch(on) {
+    touchMode = on; document.body.classList.toggle('touch', on);
+    const b = $('touchbtn'); b.textContent = on ? 'Touch på' : 'Touch av'; b.setAttribute('aria-pressed', String(on));
+    try { localStorage.setItem('c64.touch', on ? '1' : '0'); } catch (e) {}
+  }
+  { let pref = null; try { pref = localStorage.getItem('c64.touch'); } catch (e) {}
+    setTouch(pref ? pref === '1' : matchMedia('(pointer: coarse)').matches); }
+  $('touchbtn').onclick = e => { e.currentTarget.blur(); setTouch(!touchMode); };
+  // virtual stick: 8 directions from the angle, with a dead zone in the middle
+  const stick = $('stick'), knob = $('knob'); let stickId = null;
+  const DIRS = [8, 8|2, 2, 2|4, 4, 4|1, 1, 1|8]; // right, down-right, down, down-left, left, up-left, up, up-right
+  function stickMove(e) {
+    const r = stick.getBoundingClientRect(), R = r.width / 2;
+    let dx = e.clientX - (r.left + R), dy = e.clientY - (r.top + R);
+    const d = Math.hypot(dx, dy), lim = R * 0.55;
+    const kx = d > lim ? dx / d * lim : dx, ky = d > lim ? dy / d * lim : dy;
+    knob.style.transform = `translate(${kx}px, ${ky}px)`;
+    let bits = 0;
+    if (d > R * 0.18) bits = DIRS[(Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) + 8) % 8];
+    if ((tjoy & 15) !== bits) { tjoy = (tjoy & 16) | bits; applyJoy(); }
+  }
+  function stickEnd(e) {
+    if (e.pointerId !== stickId) return;
+    stickId = null; knob.style.transform = ''; tjoy &= 16; applyJoy();
+  }
+  stick.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); stickId = e.pointerId; stick.setPointerCapture(e.pointerId); stickMove(e); });
+  stick.addEventListener('pointermove', e => { if (e.pointerId === stickId) stickMove(e); });
+  stick.addEventListener('pointerup', stickEnd); stick.addEventListener('pointercancel', stickEnd);
+  const fire = $('fire');
+  const fireDown = on => { fire.classList.toggle('down', on); tjoy = on ? tjoy | 16 : tjoy & 15; applyJoy(); if (on && navigator.vibrate) navigator.vibrate(8); };
+  fire.addEventListener('pointerdown', e => { e.preventDefault(); ensureAudio(); fire.setPointerCapture(e.pointerId); fireDown(true); });
+  fire.addEventListener('pointerup', () => { fireDown(false); ensureAudio(); }); fire.addEventListener('pointercancel', () => fireDown(false));
+  fire.addEventListener('contextmenu', e => e.preventDefault()); stick.addEventListener('contextmenu', e => e.preventDefault());
+  // C64 keys as touch buttons: held while the finger is down
+  document.querySelectorAll('.dkeys [data-restore]').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); if (running) c64.restore(); }));
+  // On-screen C64 keys. On touch screens the touch events are used directly (most reliable on iOS Safari);
+  // the finger is tracked until it lifts, and a quick tap is held for at least 6 frames (120 ms).
+  let shiftLatch = false;
+  const tshift = $('tshift');
+  const setShift = on => { shiftLatch = on; tshift.setAttribute('aria-pressed', String(on)); };
+  const shiftTap = e => { e.preventDefault(); ensureAudio(); setShift(!shiftLatch); };
+  const useTouch = 'ontouchstart' in window;
+  if (useTouch) tshift.addEventListener('touchstart', shiftTap, { passive: false }); else tshift.addEventListener('pointerdown', shiftTap);
+  document.querySelectorAll('.tkeys [data-k], .dkeys [data-k]').forEach(b => {
+    const code = 'btn-' + b.dataset.k + '-' + Math.random();
+    let active = false;
+    const down = e => {
+      e.preventDefault(); if (!running || active) return;
+      active = true; ensureAudio(); b.classList.add('down');
+      let keys = b.dataset.k.split(' '), label = b.textContent;
+      if (shiftLatch && b.closest('.tkeys')) { if (!keys.includes('LSH')) keys = ['LSH', ...keys]; label = 'SHIFT+' + label; setShift(false); }
+      pressed.set(code, { keys, frame: frameNo, up: false, hold: 6 }); applyMatrix();
+      status(`Tast: ${label}`);
+    };
+    const up = e => { if (!active) return; active = false; b.classList.remove('down'); const p = pressed.get(code); if (p) p.up = true; };
+    if (useTouch && b.closest('.tkeys')) {
+      b.addEventListener('touchstart', down, { passive: false });
+      b.addEventListener('touchend', e => { e.preventDefault(); ensureAudio(); up(e); }, { passive: false });
+      b.addEventListener('touchcancel', up);
+    } else {
+      b.addEventListener('pointerdown', e => { try { b.setPointerCapture(e.pointerId); } catch (err) {} down(e); });
+      b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up);
+    }
+    b.addEventListener('contextmenu', e => e.preventDefault());
+  });
+  // Paste: read the clipboard (Safari shows a «Lim inn» bubble); if that's not allowed, ask in a dialog
+  async function pasteText() {
+    if (!running) { status('Legg inn ROM-filene først'); return; }
+    let t = null;
+    try { if (navigator.clipboard && navigator.clipboard.readText) t = await navigator.clipboard.readText(); } catch (e) { t = null; }
+    if (!t) t = prompt('Lim inn teksten her (hold fingeren i feltet og velg «Lim inn»), og trykk OK:', '');
+    if (t) { typeText(t.replace(/\r\n/g, '\n')); status(`Limer inn ${t.length} tegn …`); }
+  }
+  document.querySelectorAll('.pastebtn').forEach(b => b.addEventListener('click', e => { e.preventDefault(); b.blur(); pasteText(); }));
+  // phone keyboard: a hidden text field feeds the C64 keyboard buffer
+  const kbd = $('kbd');
+  $('kbdbtn').addEventListener('click', () => { kbd.value = ''; kbd.focus(); });
+  kbd.addEventListener('beforeinput', e => {
+    if (!running) return;
+    if (e.inputType === 'insertText' && e.data) typeText(e.data);
+    else if (e.inputType === 'insertLineBreak' || e.inputType === 'insertParagraph') typeText('\r');
+    else if (e.inputType === 'deleteContentBackward') typeText('\b');
+    else if (e.inputType === 'insertFromPaste' || e.inputType === 'insertReplacementText') {
+      const t = e.data || (e.dataTransfer && e.dataTransfer.getData('text/plain')) || ''; if (t) typeText(t.replace(/\r\n/g, '\n'));
+    }
+    e.preventDefault();
+  });
+  kbd.addEventListener('keydown', e => { if (e.key === 'Enter') { typeText('\r'); e.preventDefault(); } });
+  $('disksel').onchange = e => { const d = diskList[+e.target.value]; e.target.blur(); if (d) insertDisk(d.b, d.name, false); };
+  $('romsbtn').onclick = e => { e.currentTarget.blur(); $('setup').hidden = !$('setup').hidden; };
+  document.addEventListener('dragover', e => { e.preventDefault(); $('setup').classList.add('over'); });
+  document.addEventListener('dragleave', () => $('setup').classList.remove('over'));
+  document.addEventListener('drop', e => { e.preventDefault(); $('setup').classList.remove('over'); handleFiles([...e.dataTransfer.files]); });
+
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  loadRoms().then(r => {
+    if (r && r.basic && r.kernal && r.chargen) { Object.assign(roms, r); markRoms(); boot(); if (!roms.drive) status('Tips: legg inn 1541-ROM under «Bytt ROM-filer» for spill med hurtiglastere'); }
+    else { markRoms(); $('setup').hidden = false; status('Venter på ROM-filer'); }
+  });
+})();
+</script>
+</body>
+</html>

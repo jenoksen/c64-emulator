@@ -1,0 +1,10 @@
+# ROM-filer og diskbilder er opphavsrettsbeskyttet og skal ikke inn i repoet
+data/
+*.bin
+*.rom
+*.d64
+*.prg
+*.g64
+# Lokale filer
+.DS_Store
+node_modules/
